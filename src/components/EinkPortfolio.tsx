@@ -25,6 +25,7 @@ import AboutSection from "./eink/sections/AboutSection";
 import ProjectsSection from "./eink/sections/ProjectsSection";
 import TalksSection from "./eink/sections/TalksSection";
 import WorkSection from "./eink/sections/WorkSection";
+import BackgroundSection from "./eink/sections/BackgroundSection";
 import ContactSection from "./eink/sections/ContactSection";
 
 export default function EinkPortfolio() {
@@ -38,6 +39,7 @@ export default function EinkPortfolio() {
     projects: useRef<HTMLElement | null>(null),
     talks: useRef<HTMLElement | null>(null),
     work: useRef<HTMLElement | null>(null),
+    background: useRef<HTMLElement | null>(null),
     contact: useRef<HTMLElement | null>(null),
   };
   const scrollLock = useRef<boolean>(false);
@@ -131,6 +133,11 @@ export default function EinkPortfolio() {
         <Divider c={c} label={t.sectionWork} />
         <section ref={refs.work} data-section="work">
           <WorkSection c={c} t={t} lang={lang} />
+        </section>
+
+        <Divider c={c} label={t.sectionBackground} />
+        <section ref={refs.background} data-section="background">
+          <BackgroundSection c={c} t={t} lang={lang} />
         </section>
 
         <Divider c={c} label={t.sectionContact} />

@@ -6,7 +6,17 @@
       "Bash(pnpm exec *)",
       "Bash(curl *)",
       "WebFetch(domain:www.youtube.com)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "WebFetch(domain:www.powerhouse.inc)",
+      "Bash(ffmpeg -version)",
+      "Bash(mkdir -p /Users/gpuente/Projects/new-portfolio/src/assets/portfolio)",
+      "Bash(cp compara.png en-web.jpeg en-desktop.jpg en-mobile.png groupon.jpeg plug.jpeg space-desktop.jpeg /Users/gpuente/Projects/new-portfolio/src/assets/portfolio/)",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_close",
+      "Bash(pnpm rebuild *)"
     ]
   }
 }

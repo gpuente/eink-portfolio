@@ -11,16 +11,28 @@ export type Experience = {
 
 export const EXPERIENCE: Experience[] = [
   {
-    role_en: "Senior Software Engineer",
-    role_es: "Senior Software Engineer",
-    org: "Evernote",
-    when: "2021 —",
+    role_en: "Frontend Engineer",
+    role_es: "Ingeniero Frontend",
+    org: "MakerDAO SES",
+    when: "2023 —",
     place_en: "Remote · Global",
     place_es: "Remoto · Global",
     detail_en:
-      "Shipping and maintaining features across Mobile (iOS, Android), Desktop (Electron on Windows, macOS, Linux), and Web, plus microservices on the client-service contact layer. Stack: React, Redux, TypeScript, Node, GraphQL, gRPC, Electron, Docker, Kubernetes.",
+      "Building Powerhouse — a Web3 platform for DAOs and ecosystem actors covering governance, document management, contributor coordination, and budget reporting. Stack: React, TypeScript, Electron, GraphQL, Redux, TailwindCSS, Vite, Storybook, Jest.",
     detail_es:
-      "Envío y mantenimiento de features en los clientes Mobile (iOS, Android), Desktop (Electron en Windows, macOS, Linux) y Web, además de microservicios en la capa de contacto cliente-servicio. Stack: React, Redux, TypeScript, Node, GraphQL, gRPC, Electron, Docker, Kubernetes.",
+      "Construyendo Powerhouse — una plataforma Web3 para DAOs y actores del ecosistema, que cubre gobernanza, gestión documental, coordinación de contribuyentes y reportes de presupuesto. Stack: React, TypeScript, Electron, GraphQL, Redux, TailwindCSS, Vite, Storybook, Jest.",
+  },
+  {
+    role_en: "Senior Software Engineer",
+    role_es: "Senior Software Engineer",
+    org: "Evernote",
+    when: "2021 — 2023",
+    place_en: "Remote · Global",
+    place_es: "Remoto · Global",
+    detail_en:
+      "Shipped and maintained features across Mobile (iOS, Android), Desktop (Electron on Windows, macOS, Linux), and Web, plus microservices on the client-service contact layer. Contributed to AI Note Cleanup — Evernote's first AI-powered feature — and to the Tasks feature used by millions. Mentored interns in the 2022–2023 program. Stack: React, Redux, TypeScript, Node, GraphQL, gRPC, OpenAI, Electron, Docker, Kubernetes.",
+    detail_es:
+      "Envié y mantuve features en los clientes Mobile (iOS, Android), Desktop (Electron en Windows, macOS, Linux) y Web, además de microservicios en la capa de contacto cliente-servicio. Contribuí a AI Note Cleanup — la primera feature con IA de Evernote — y a Tasks, usada por millones. Mentor en el programa de internships 2022-2023. Stack: React, Redux, TypeScript, Node, GraphQL, gRPC, OpenAI, Electron, Docker, Kubernetes.",
   },
   {
     role_en: "Frontend Engineer",

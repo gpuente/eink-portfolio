@@ -1,4 +1,4 @@
-import { ArrowUpRight, Github } from "lucide-react";
+import { ArrowUpRight, Github, Image as ImageIcon } from "lucide-react";
 import { PROJECTS } from "../data/projects";
 import type { Palette } from "../data/palettes";
 import type { Copy, Lang } from "../data/copy";
@@ -23,13 +23,37 @@ export default function ProjectsSection({ c, t, lang }: Props) {
         style={{
           color: c.inkSoft,
           fontSize: 17,
-          margin: "0 0 40px",
+          margin: "0 0 24px",
           lineHeight: 1.55,
           maxWidth: 600,
         }}
       >
         {t.projectsSub}
       </p>
+
+      <a
+        href="/gallery"
+        className="gallery-cta"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 44,
+          padding: "11px 18px",
+          background: c.ink,
+          color: c.paper,
+          border: "none",
+          borderRadius: 8,
+          fontSize: 14,
+          letterSpacing: ".02em",
+          textDecoration: "none",
+          fontFamily: "inherit",
+        }}
+      >
+        <ImageIcon size={16} />
+        {t.projectsGalleryLink}
+        <ArrowUpRight size={15} className="cta-arrow" />
+      </a>
 
       <div>
         {PROJECTS.map((p, i) => {

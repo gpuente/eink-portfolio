@@ -22,6 +22,23 @@ export default function GlobalStyles({ c }: Props) {
       }
       .clock-sep { animation: clock-blink 1s infinite; }
 
+      /* Primary CTA used by the "See visual gallery" link in Projects.
+         Calm hover (no scale, no springy movement) but enough motion on the
+         arrow to invite the click. */
+      .gallery-cta {
+        transition: transform 240ms ease, box-shadow 240ms ease;
+      }
+      .gallery-cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px -10px rgba(60, 50, 30, .4);
+      }
+      .gallery-cta .cta-arrow {
+        transition: transform 240ms ease;
+      }
+      .gallery-cta:hover .cta-arrow {
+        transform: translate(2px, -2px);
+      }
+
       .grain {
         position: fixed; inset: 0; pointer-events: none; z-index: 100;
         background-image:

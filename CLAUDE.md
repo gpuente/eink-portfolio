@@ -39,8 +39,10 @@ Technical terms (React, Go, gRPC, TypeScript, IPFS) stay in English in both loca
 ### File map
 ```
 astro.config.mjs               → @astrojs/react integration
-src/layouts/Layout.astro       → <html>/<head>/<body>. Sets title + resets margins globally
+src/layouts/Layout.astro       → <html>/<head>/<body>. Accepts `title` + `description` props
 src/pages/index.astro          → renders <EinkPortfolio client:load />
+src/pages/gallery.astro        → static visual gallery of projects (B&W → colour on hover)
+src/assets/portfolio/          → optimized images + MP4s (originals copied/converted from data/assets/portfolio/)
 src/components/
   EinkPortfolio.tsx            → root component. Owns mode/lang/refs/time state; composes everything below
   eink/
@@ -92,6 +94,16 @@ public/                        → favicon.ico, favicon.svg
 - **Hook return shapes** (`WeatherData`, `GitHubData`, `MoonPhase`) are co-located with their hook files — import the type from the same module.
 
 The component is hydrated with `client:load` (not `client:idle` or `client:visible`) because the status bar, theme toggle, and scroll spy all need to be interactive immediately on first paint. Because `client:load` still SSR-renders the component at build time, all sections (including projects/work/contact text) are present in the static HTML — good for SEO.
+
+### `/gallery` page
+
+A second route (`src/pages/gallery.astro`) shows the same projects visually. **Pure static Astro** — no React, no JS shipped. Each card uses CSS `filter: grayscale(100%)` by default and `grayscale(0)` on hover with a 700ms ease transition (matches the e-ink "calm" pacing).
+
+- Static images come through `astro:assets` and are processed by Sharp into responsive `webp` at multiple widths
+- Animated content lives as `<video autoplay loop muted playsinline>` on MP4 files (originally GIFs converted with ffmpeg → ~85% size reduction)
+- The home → gallery link sits at the foot of the Projects section (`projectsGalleryLink` string in `COPY`)
+
+If you add a project to `data/projects.ts`, also add a row to `mediaMap` in `gallery.astro` so it appears in the gallery. Projects without a media entry are silently skipped.
 
 ### How to evolve content
 
@@ -360,8 +372,9 @@ Uses `gap: 1` on the grid parent with `background: c.inkFaint` — the 1px gap b
 
 ## Dependencies
 
-- `astro` 6 + `@astrojs/react` 5 (the host framework; only job is to render the React island)
+- `astro` 6 + `@astrojs/react` 5 (the host framework; renders the React island on /, the static gallery page on /gallery)
 - `react` / `react-dom` 19 with `@types/react` / `@types/react-dom` (hooks: useState, useEffect, useRef)
+- `sharp` (used by `astro:assets` to optimize gallery images → webp at multiple widths)
 - `typescript` + `@astrojs/check` (dev deps) — run `pnpm exec astro check` for a full typecheck across `.astro` + `.ts` + `.tsx`
 - `lucide-react` **pinned to 0.474.0** — later versions dropped the `Github` brand icon (also emits a `ts(6385)` deprecation hint on use; expected and documented). If you bump this, you must replace `<Github />` in the status bar with an alternative (e.g. inline SVG or `GitBranch`)
 - Icons used: Home, Briefcase, User, Mail, FolderGit2, Mic, Sun, Moon, ArrowUpRight, MapPin, Cloud, CloudRain, CloudSnow, CloudFog, CloudLightning, Rocket, Bitcoin, Languages, Github, CircleDot

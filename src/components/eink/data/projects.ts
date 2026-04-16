@@ -17,14 +17,26 @@ export type Project = {
 
 export const PROJECTS: Project[] = [
   {
+    title: "Powerhouse",
+    kind_en: "Decentralized operations toolkit · MakerDAO SES",
+    kind_es: "Toolkit de operaciones descentralizadas · MakerDAO SES",
+    year: "2023 —",
+    note_en:
+      "Operations toolkit for DAOs and open organizations. Five integrated modules: Renown (Ethereum-based identity and reputation), Connect (team collaboration), Fusion (document management), Switchboard (data integration and automation), and Academy. Built with React, TypeScript, Electron, GraphQL, Redux, and TailwindCSS. MakerDAO is the flagship case study.",
+    note_es:
+      "Toolkit de operaciones para DAOs y organizaciones abiertas. Cinco módulos integrados: Renown (identidad y reputación basadas en Ethereum), Connect (colaboración de equipo), Fusion (gestión documental), Switchboard (integración y automatización de datos) y Academy. Construido con React, TypeScript, Electron, GraphQL, Redux y TailwindCSS. MakerDAO es el caso de uso principal.",
+    href: "https://www.powerhouse.inc/",
+    repo: null,
+  },
+  {
     title: "Evernote",
     kind_en: "Cross-platform client · Evernote",
     kind_es: "Cliente multiplataforma · Evernote",
-    year: "2021 —",
+    year: "2021 — 2023",
     note_en:
-      "Note-taking product across iOS, Android, desktop (Windows, macOS, Linux), and web. Shipping features and maintaining the client-service contact surface.",
+      "Note-taking product across iOS, Android, desktop (Windows, macOS, Linux), and web. Shipped features and maintained the client-service contact surface, including AI Note Cleanup — Evernote's first AI-powered feature — and the Tasks feature used by millions.",
     note_es:
-      "Producto de toma de notas en iOS, Android, desktop (Windows, macOS, Linux) y web. Envío features y mantengo el área de contacto entre clientes y servicios.",
+      "Producto de toma de notas en iOS, Android, desktop (Windows, macOS, Linux) y web. Envié features y mantuve el área de contacto entre clientes y servicios, incluyendo AI Note Cleanup — la primera feature con IA del producto — y Tasks, usada por millones.",
     href: "https://evernote.com",
     repo: null,
   },

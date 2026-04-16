@@ -1,0 +1,299 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Layout from '../layouts/Layout.astro';
+import { PROJECTS } from '../components/eink/data/projects';
+
+import powerhouseImg from '../assets/portfolio/powerhouse.jpeg';
+import evernoteImg from '../assets/portfolio/en-web.jpeg';
+import shirtVid from '../assets/portfolio/threejs-demo.mp4';
+import onboardingVid from '../assets/portfolio/onboarding-demo-rn.mp4';
+import plugImg from '../assets/portfolio/plug.jpeg';
+import spaceImg from '../assets/portfolio/space-desktop.jpeg';
+import fleekVid from '../assets/portfolio/fleek.mp4';
+import mangaVid from '../assets/portfolio/manga-cli.mp4';
+import comparaImg from '../assets/portfolio/compara.png';
+import lqipVid from '../assets/portfolio/lqip.mp4';
+import grouponImg from '../assets/portfolio/groupon.jpeg';
+
+type ImageMedia = { kind: 'image'; src: ImageMetadata; alt: string };
+type VideoMedia = { kind: 'video'; src: string; alt: string };
+type Media = ImageMedia | VideoMedia;
+
+const mediaMap: Record<string, Media> = {
+	'Powerhouse':           { kind: 'image', src: powerhouseImg,  alt: 'Powerhouse landing page' },
+	'Evernote':             { kind: 'image', src: evernoteImg,    alt: 'Evernote web client' },
+	'AI Shirt Customizer':  { kind: 'video', src: shirtVid,       alt: 'AI Shirt Customizer demo' },
+	'RN Onboarding':        { kind: 'video', src: onboardingVid,  alt: 'React Native onboarding demo' },
+	'Plug Wallet':          { kind: 'image', src: plugImg,        alt: 'Plug Wallet extension' },
+	'Space Desktop':        { kind: 'image', src: spaceImg,       alt: 'Space Desktop client' },
+	'Fleek':                { kind: 'video', src: fleekVid,       alt: 'Fleek platform' },
+	'Manga CLI':            { kind: 'video', src: mangaVid,       alt: 'Manga CLI tool' },
+	'ComparaOnline':        { kind: 'image', src: comparaImg,     alt: 'ComparaOnline marketplace' },
+	'LQIP for React':       { kind: 'video', src: lqipVid,        alt: 'LQIP progressive image loading demo' },
+	'Groupon LATAM':        { kind: 'image', src: grouponImg,     alt: 'Groupon LATAM e-commerce' },
+};
+
+const items = PROJECTS
+	.map(p => ({ project: p, media: mediaMap[p.title] }))
+	.filter((it): it is { project: typeof it.project; media: Media } => it.media != null);
+---
+
+<Layout
+	title="Gallery · Guillermo Puente"
+	description="Visual archive of products and personal projects shipped over the past decade."
+>
+	<!-- Surface layers — paper grain, vignette, inset shadow -->
+	<div class="grain"></div>
+	<div class="vignette"></div>
+	<div class="inset-shadow"></div>
+
+	<header class="bar">
+		<a href="/" class="back">
+			<span aria-hidden="true">&larr;</span> Portfolio
+		</a>
+		<span class="meta">Gallery &middot; {items.length} projects</span>
+	</header>
+
+	<main class="page">
+		<div class="intro">
+			<h1>Gallery.</h1>
+			<p>
+				A visual archive of products and personal projects. Hover a card to see it in colour.
+				Click to open the live site or repository.
+			</p>
+		</div>
+
+		<div class="grid">
+			{items.map(({ project, media }) => {
+				const link = project.href || project.repo;
+				const inner = (
+					<>
+						<div class="media-wrap">
+							{media.kind === 'video' ? (
+								<video
+									src={media.src}
+									autoplay
+									loop
+									muted
+									playsinline
+									preload="metadata"
+									class="media"
+									aria-label={media.alt}
+								/>
+							) : (
+								<Image
+									src={media.src}
+									alt={media.alt}
+									widths={[480, 800, 1200]}
+									sizes="(min-width: 720px) 580px, 100vw"
+									class="media"
+									loading="lazy"
+								/>
+							)}
+						</div>
+						<div class="info">
+							<div class="title-row">
+								<h3>{project.title}</h3>
+								<span class="year">{project.year}</span>
+							</div>
+							<div class="kind">{project.kind_en}</div>
+						</div>
+					</>
+				);
+
+				return link ? (
+					<a class="card" href={link} target="_blank" rel="noreferrer">
+						{inner}
+					</a>
+				) : (
+					<div class="card">{inner}</div>
+				);
+			})}
+		</div>
+
+		<footer class="end">
+			<a href="/" class="back">
+				<span aria-hidden="true">&larr;</span> Back to portfolio
+			</a>
+		</footer>
+	</main>
+</Layout>
+
+<style>
+	@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+	:global(html), :global(body) {
+		background: #e8e4db;
+		color: #2b2a27;
+		font-family: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+	}
+
+	/* Surface layers */
+	.grain {
+		position: fixed; inset: 0; pointer-events: none; z-index: 100;
+		background-image:
+			radial-gradient(rgba(0, 0, 0, .05) 1px, transparent 1px),
+			radial-gradient(rgba(0, 0, 0, .035) 1px, transparent 1px);
+		background-size: 3px 3px, 7px 7px;
+		background-position: 0 0, 1px 2px;
+		mix-blend-mode: multiply;
+		opacity: .55;
+	}
+	.vignette {
+		position: fixed; inset: 0; pointer-events: none; z-index: 99;
+		background: radial-gradient(ellipse at center, transparent 50%, rgba(80, 65, 40, .08) 85%, rgba(80, 65, 40, .14) 100%);
+	}
+	.inset-shadow {
+		position: fixed; inset: 0; pointer-events: none; z-index: 98;
+		box-shadow:
+			inset 0 3px 10px rgba(60, 50, 30, .12),
+			inset 0 -2px 6px rgba(255, 255, 255, .25);
+	}
+
+	/* Top bar with back link */
+	.bar {
+		position: fixed;
+		top: 0; left: 0; right: 0;
+		z-index: 50;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 12px 24px;
+		min-height: 44px;
+		background: #e8e4db;
+		border-bottom: 1px dashed #a8a49a;
+		font-family: 'JetBrains Mono', ui-monospace, monospace;
+		font-size: 12px;
+		letter-spacing: .06em;
+		color: #6b6860;
+	}
+	.bar .back,
+	.end .back {
+		text-decoration: none;
+		color: #2b2a27;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-family: inherit;
+		font-size: inherit;
+	}
+	.bar .meta {
+		text-transform: uppercase;
+		letter-spacing: .25em;
+		font-size: 10px;
+		color: #6b6860;
+	}
+
+	/* Page */
+	.page {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 96px 24px 96px;
+	}
+	.intro {
+		max-width: 600px;
+		margin: 0 auto 56px;
+		text-align: left;
+	}
+	.intro h1 {
+		font-size: clamp(36px, 5vw, 56px);
+		font-weight: 500;
+		letter-spacing: -.015em;
+		margin: 0 0 16px;
+		color: #2b2a27;
+	}
+	.intro p {
+		color: #6b6860;
+		font-size: 17px;
+		line-height: 1.6;
+		margin: 0;
+	}
+
+	/* Grid */
+	.grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 28px;
+	}
+	@media (min-width: 720px) {
+		.grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+	}
+
+	/* Card */
+	.card {
+		display: block;
+		text-decoration: none;
+		color: inherit;
+		background: #f1ede4;
+		border: 1px solid #a8a49a;
+		border-radius: 10px;
+		overflow: hidden;
+		transition: box-shadow 600ms ease, transform 600ms ease;
+	}
+	a.card:hover {
+		box-shadow: 0 14px 30px -16px rgba(60, 50, 30, .35);
+		transform: translateY(-2px);
+	}
+
+	.media-wrap {
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 10;
+		overflow: hidden;
+		background: #e8e4db;
+	}
+	.media {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		filter: grayscale(100%) contrast(0.92) brightness(0.98);
+		transition: filter 700ms ease;
+	}
+	.card:hover .media {
+		filter: grayscale(0%) contrast(1) brightness(1);
+	}
+
+	.info {
+		padding: 16px 18px;
+		border-top: 1px solid #a8a49a;
+	}
+	.title-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 12px;
+	}
+	.info h3 {
+		margin: 0;
+		font-family: 'Newsreader', serif;
+		font-size: 20px;
+		font-weight: 500;
+		color: #2b2a27;
+		letter-spacing: -.005em;
+	}
+	.info .year {
+		font-family: 'JetBrains Mono', ui-monospace, monospace;
+		font-size: 11px;
+		color: #a8a49a;
+		letter-spacing: .15em;
+	}
+	.info .kind {
+		margin-top: 6px;
+		font-family: 'JetBrains Mono', ui-monospace, monospace;
+		font-size: 10px;
+		color: #6b6860;
+		letter-spacing: .15em;
+		text-transform: uppercase;
+	}
+
+	.end {
+		margin-top: 80px;
+		text-align: center;
+	}
+
+	/* Buttons inside the card should never capture clicks (consistent with main page) */
+	.card * { pointer-events: none; }
+	a.card { cursor: pointer; }
+</style>
