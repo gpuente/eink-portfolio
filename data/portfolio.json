@@ -1,0 +1,712 @@
+{
+  "meta": {
+    "site_title": "Guillermo Puente Sandoval",
+    "description": "I'm a Full-Stack Engineer with 7+ years of experience. I'm based on Santiago, Chile. I've spent most of my experience focused on Web Development, but I also have experience in mobile and desktop apps development.",
+    "default_language": "en",
+    "languages": ["en", "es"],
+    "source": "Extracted from src/data/db.json, src/locales/en/translation.json, src/locales/es/translation.json and public assets of the existing portfolio.",
+    "note": "All file paths in this JSON are relative to the folder that contains this file (data/). Copy the entire data/ folder to feed a new LLM-generated portfolio with everything it needs."
+  },
+  "profile": {
+    "first_name": "Guillermo",
+    "last_name": "Puente",
+    "full_name": "Guillermo Puente Sandoval",
+    "initial": "G",
+    "role": {
+      "en": "Full-Stack Developer",
+      "es": "Desarrollador Full-Stack"
+    },
+    "headline": {
+      "en": "Full-Stack Engineer with 7+ years of experience based in Santiago, Chile.",
+      "es": "Ingeniero Full-Stack con 7+ años de experiencia, basado en Santiago, Chile."
+    },
+    "intro": {
+      "en": "Hello, hello! I'm Guillermo, a Full-Stack Engineer with 7+ years of experience. I'm based in Santiago, Chile. I've spent most of my career focused on web development, but I also have experience in mobile and desktop app development. If you want to know more about me, keep scrolling!",
+      "es": "Hola hola! Soy Guillermo y soy un desarrollador Full-Stack con 7+ años de experiencia. Soy de Santiago, Chile. He pasado la mayor parte de mi experiencia enfocado en el desarrollo web, paro también tengo experiencia en el desarrollo de aplicaciones móviles y de escritorio. Si quieres saber mas sobre mi, sigue scrolleando!"
+    },
+    "location": "Santiago, Chile",
+    "email": "guillermo.ps09@gmail.com",
+    "phone": "+56 99 631 5039",
+    "avatar": "./assets/profile/avatar.jpg",
+    "cv": {
+      "en": "./assets/cv/CV_EN.pdf"
+    }
+  },
+  "social_networks": [
+    {
+      "id": "whatsapp",
+      "label": "WhatsApp",
+      "url": "https://wa.me/56996315039"
+    },
+    {
+      "id": "linkedin",
+      "label": "LinkedIn",
+      "url": "https://www.linkedin.com/in/guillermo-puente-66125b54/"
+    },
+    {
+      "id": "email",
+      "label": "Email",
+      "url": "mailto:guillermo.ps09@gmail.com"
+    },
+    {
+      "id": "github",
+      "label": "GitHub",
+      "url": "https://github.com/gpuente"
+    },
+    {
+      "id": "twitter",
+      "label": "Twitter / X",
+      "url": "https://twitter.com/memo_asd"
+    },
+    {
+      "id": "soundcloud",
+      "label": "SoundCloud",
+      "url": "https://soundcloud.com/guillermo-puente-sandoval"
+    }
+  ],
+  "services": [
+    {
+      "id": "web",
+      "title": {
+        "en": "Web Development",
+        "es": "Desarrollo Web"
+      },
+      "description": {
+        "en": "I have 7+ years of experience in web development, both on the Front-end side and Back-end side. I know how to build and deliver beautiful UIs using modern technologies as well as build scalable services that can handle your business logic.",
+        "es": "Tengo más de 6 años de experiencia en desarrollo web, tanto en el lado del Front-end como en el Back-end. Sé cómo crear y ofrecer interfaces de usuario que lucen hermosas utilizando tecnologías modernas, así como también crear servicios escalables que puedan manejar la lógica de tu negocio."
+      }
+    },
+    {
+      "id": "mobile",
+      "title": {
+        "en": "Mobile Development",
+        "es": "Desarrollo Mobile"
+      },
+      "description": {
+        "en": "If you have an idea for a mobile app, I can assist you with it. As a React developer, I have utilized React Native to create mobile apps for both iOS and Android platforms. Feel free to explore my portfolio section to view some of my demo apps.",
+        "es": "Si tienes una idea para una aplicación móvil, puedo ayudarte!. Como desarrollador de React, he usado React Native para crear aplicaciones móviles para iOS y Android. Revisa mi portafolio para ver algunas de las aplicaciones que he agregado como demo."
+      }
+    },
+    {
+      "id": "desktop",
+      "title": {
+        "en": "Desktop Development",
+        "es": "Desarrollo de Aplicaciones de Escritorio"
+      },
+      "description": {
+        "en": "Based on my experience as a developer, I have also had the opportunity to work with Electron JS in order to construct cross-platform desktop applications for Windows, Linux, and OS X. These applications utilize modern web technologies.",
+        "es": "En mi experiencia como desarrollador, también he tenido la oportunidad de trabajar con Electron JS para crear aplicaciones de escritorio multiplataforma (Windows, Linux y OS X) utilizando tecnologías web modernas."
+      }
+    },
+    {
+      "id": "architecture",
+      "title": {
+        "en": "Software Architecture",
+        "es": "Arquitectura de Software"
+      },
+      "description": {
+        "en": "I possess the knowledge and skills to design, build, and deploy scalable and high-performing systems. If you have a business idea and are unsure of where to begin, simply reach out to me!",
+        "es": "Sé cómo diseñar, construir y poner en producción sistemas escalables y de alto rendimiento. Si tienes una idea para tu negocio y no sabes por dónde empezar, ¡mándame un mensaje!"
+      }
+    }
+  ],
+  "education": [
+    {
+      "id": "software_engineer",
+      "from": "2016",
+      "to": null,
+      "entity": "Instituto Profesional AIEP",
+      "title": {
+        "en": "Software Engineer",
+        "es": "Ingeniería Informática, mención Desarrollo de Sistemas"
+      },
+      "detail": {
+        "en": "Awarded best student of Ingeniería Informática mención \"Desarrollo de sistemas sede BUS 2016\" career.",
+        "es": "Estudiante de Ingeniería Informática con mención en desarrollo de sistemas. Premiado como mejor estudiante \"Desarrollo de sistemas sede BUS 2016\"."
+      }
+    },
+    {
+      "id": "accountant",
+      "from": "2009",
+      "to": null,
+      "entity": "Instituto Superior de Comercio No 2",
+      "title": {
+        "en": "Accountant",
+        "es": "Técnico en Contabilidad"
+      },
+      "detail": {
+        "en": "Graduated as a medium level accountant.",
+        "es": "Graduado como contador nivel medio."
+      }
+    }
+  ],
+  "experience": [
+    {
+      "id": "evernote",
+      "company": "Evernote",
+      "from": {
+        "en": "Jun 2021",
+        "es": "Jun 2021"
+      },
+      "to": {
+        "en": "Current",
+        "es": "Actualidad"
+      },
+      "is_current": true,
+      "title": {
+        "en": "Senior Software Engineer",
+        "es": "Senior Software Engineer"
+      },
+      "detail": {
+        "en": "At Evernote, I am responsible for both maintaining the existing features and developing new ones for all client environments, including Mobile, Desktop, and Web. I also have contributed in the development of microservices and client communication layer. Tech stack: React, Redux, NodeJS, GraphQL, gRPC, Electron, Docker, Kubernetes, Circle CI, and Typescript.",
+        "es": "Responsable del mantenimiento y desarrollo de nuevos features para todos los clientes de Evernote: Mobile, Desktop y Web. Tabién he trabajado en el desarrollo de micro-servicios y en la capa de comunicación con los clientes. Tech stack: React, Redux, NodeJS, GraphQL, gRPC, Electron, Docker, Kubernetes, Circle CI, and Typescript."
+      },
+      "tech_stack": ["React", "Redux", "NodeJS", "GraphQL", "gRPC", "Electron", "Docker", "Kubernetes", "Circle CI", "TypeScript"]
+    },
+    {
+      "id": "fleek",
+      "company": "Fleek",
+      "from": {
+        "en": "Jan 2019",
+        "es": "Ene 2019"
+      },
+      "to": {
+        "en": "Jun 2021",
+        "es": "Jun 2021"
+      },
+      "is_current": false,
+      "title": {
+        "en": "Frontend Software Engineer",
+        "es": "Ingeniero de Software Frontend"
+      },
+      "detail": {
+        "en": "I developed tools to assist developers in coding, testing, and deploying smart contracts using technologies such as React, Redux, NodeJS, Blockchain, Smart Contracts, GraphQL, web3, docker, and Electron. I was also involved in a project where I utilized Electron, React, Redux, gRPC, Docker, Golang, and Textile.",
+        "es": "Desarrollando herramientas para ayudar a escribir, testear y desplegar contratos inteligentes: React, Redux, NodeJS, Blockchain, Smart Contracts, GraphQL, web3, docker, Electron. Actualmente trabajando en un nuevo proyecto, utilizando: Electron, react, redux, gRPC, docker, golang, textile."
+      },
+      "tech_stack": ["React", "Redux", "NodeJS", "Blockchain", "Smart Contracts", "GraphQL", "web3", "Docker", "Electron", "gRPC", "Golang", "Textile"]
+    },
+    {
+      "id": "comparaonline",
+      "company": "ComparaOnline",
+      "from": {
+        "en": "Feb 2018",
+        "es": "Feb 2018"
+      },
+      "to": {
+        "en": "Jan 2019",
+        "es": "Ene 2019"
+      },
+      "is_current": false,
+      "title": {
+        "en": "Frontend Software Engineer",
+        "es": "Ingeniero de Software Frontend"
+      },
+      "detail": {
+        "en": "I was working as a developer for the e-commerce platform, using technologies such as: React, Redux, RxJx, NodeJS, GraphQL, Redis, MongoDB, Typescript, Microservices, Micro-Frontends, Webpack.",
+        "es": "Trabajé como desarrollador para la plataforma de e-commerce, usando tecnologías como: React, Redux, RxJx, NodeJS, GraphQL, Redis, MongoDB, Typescript, Microservices, Micro-Frontends, Webpack."
+      },
+      "tech_stack": ["React", "Redux", "RxJS", "NodeJS", "GraphQL", "Redis", "MongoDB", "TypeScript", "Microservices", "Micro-Frontends", "Webpack"]
+    },
+    {
+      "id": "groupon",
+      "company": "Groupon",
+      "from": {
+        "en": "Jun 2017",
+        "es": "Jun 2017"
+      },
+      "to": {
+        "en": "Jan 2018",
+        "es": "Ene 2018"
+      },
+      "is_current": false,
+      "title": {
+        "en": "Software Engineer",
+        "es": "Ingeniero de Software"
+      },
+      "detail": {
+        "en": "I was part of the team that built the whole Groupon e-commerce from scratch for LATAM, using: ReactJS, RxJx, Redis, MongoDB, MySQL, REST API, AsyncJS, Microservices.",
+        "es": "Fuí parte del equipo que creo la plataforma de e-commerce para LATAM desde cero, usando tecnologías como: ReactJS, RxJx, Redis, MongoDB, MySQL, REST API, AsyncJS, Microservices."
+      },
+      "tech_stack": ["ReactJS", "RxJS", "Redis", "MongoDB", "MySQL", "REST API", "AsyncJS", "Microservices"]
+    },
+    {
+      "id": "borealis",
+      "company": "Borealis",
+      "from": {
+        "en": "Aug 2016",
+        "es": "Ago 2016"
+      },
+      "to": {
+        "en": "May 2017",
+        "es": "May 2017"
+      },
+      "is_current": false,
+      "title": {
+        "en": "Software Engineer",
+        "es": "Ingeniero de Software"
+      },
+      "detail": {
+        "en": "In Borealis, as a software factory, I was working as a Software Engineer on multiple projects for several clients, using technologies such as: REST, NodeJS, Laravel, PHP, Angular, Ionic, MySQL, Postgresql.",
+        "es": "En Borealis, como una empresa de software factory, me desempeñé como Ingeniero de Software para múltiples clientes en varios proyectos, haciendo uso de diversas tecnologías, tales como: REST, NodeJS, Laravel, PHP, Angular, Ionic, MySQL, Postgresql."
+      },
+      "tech_stack": ["REST", "NodeJS", "Laravel", "PHP", "Angular", "Ionic", "MySQL", "PostgreSQL"]
+    },
+    {
+      "id": "ascomed",
+      "company": "ASCOMED",
+      "from": {
+        "en": "Jan 2015",
+        "es": "Ene 2015"
+      },
+      "to": {
+        "en": "Jan 2017",
+        "es": "Ene 2017"
+      },
+      "is_current": false,
+      "title": {
+        "en": "Freelance Developer",
+        "es": "Desarrollador Freelance"
+      },
+      "detail": {
+        "en": "I was responsible of the design, development and deployment of a web-app for managing clients and payments for ASCOMED company. Tech stack: NodeJS, PHP, Mysql, Docker, HTML, CSS, Javascript.",
+        "es": "Fuí responsable del disño, desarrollo y puesta en producción de un sistema para administración y gestión de clientes para la empresa ASCOMED. Tecnologías utilizadas: NodeJS, PHP, Mysql, Docker, HTML, CSS, Javascript."
+      },
+      "tech_stack": ["NodeJS", "PHP", "MySQL", "Docker", "HTML", "CSS", "JavaScript"]
+    },
+    {
+      "id": "bd",
+      "company": "Becton Dickinson and Company",
+      "from": {
+        "en": "Jul 2011",
+        "es": "Jul 2011"
+      },
+      "to": {
+        "en": "Jun 2016",
+        "es": "Jun 2016"
+      },
+      "is_current": false,
+      "title": {
+        "en": "Accountant Analyst",
+        "es": "Analista Contable"
+      },
+      "detail": {
+        "en": "Accountant analyst, responsible for treasury and T&E tasks.",
+        "es": "Analista contable responsable de tesorería y tareas relacionadas a gastos y viajes."
+      },
+      "tech_stack": []
+    },
+    {
+      "id": "capgemini",
+      "company": "Capgemini",
+      "from": {
+        "en": "Dec 2009",
+        "es": "Dec 2009"
+      },
+      "to": {
+        "en": "Sep 2011",
+        "es": "Sep 2011"
+      },
+      "is_current": false,
+      "title": {
+        "en": "Accountant Analyst",
+        "es": "Analista Contable"
+      },
+      "detail": {
+        "en": "Accountant analyst, responsible for fixed assets tasks and registers.",
+        "es": "Analista contable responsable de contabilización de activos fijos."
+      },
+      "tech_stack": []
+    }
+  ],
+  "certificates": [
+    {
+      "title": "React Native - The Practical Guide [2021 Edition]",
+      "company": "Udemy",
+      "id": "UC-ed89d2d2-2042-4e0b-9ba4-f8d2d5d0ca01",
+      "url": "https://www.udemy.com/certificate/UC-ed89d2d2-2042-4e0b-9ba4-f8d2d5d0ca01/",
+      "issued": "2021-04-01T03:00:00.000Z",
+      "logo": {
+        "url": "./assets/certificates/udemy.png",
+        "width": 60
+      }
+    },
+    {
+      "title": "Go: The Complete Developer's Guide (Golang)",
+      "company": "Udemy",
+      "id": "UC-1f53cf55-5d2f-4fce-b09e-fc7555309976",
+      "url": "https://www.udemy.com/certificate/UC-1f53cf55-5d2f-4fce-b09e-fc7555309976/",
+      "issued": "2021-01-01T03:00:00.000Z",
+      "logo": {
+        "url": "./assets/certificates/udemy.png",
+        "width": 60
+      }
+    },
+    {
+      "title": "Understanding TypeScript",
+      "company": "Udemy",
+      "id": "UC-L0CQ1OR8",
+      "url": "https://www.udemy.com/certificate/UC-L0CQ1OR8/",
+      "issued": "2018-12-01T03:00:00.000Z",
+      "logo": {
+        "url": "./assets/certificates/udemy.png",
+        "width": 60
+      }
+    },
+    {
+      "title": "Modern React with Redux",
+      "company": "Udemy",
+      "id": "UC-MVDGGWJX",
+      "url": "https://www.udemy.com/certificate/UC-MVDGGWJX/",
+      "issued": "2018-01-01T03:00:00.000Z",
+      "logo": {
+        "url": "./assets/certificates/udemy.png",
+        "width": 60
+      }
+    },
+    {
+      "title": "Server Side Rendering with React and Redux",
+      "company": "Udemy",
+      "id": "UC-T9W3DKLW",
+      "url": "https://www.udemy.com/certificate/UC-T9W3DKLW/",
+      "issued": "2018-01-01T03:00:00.000Z",
+      "logo": {
+        "url": "./assets/certificates/udemy.png",
+        "width": 60
+      }
+    },
+    {
+      "title": "Webpack 2: The Complete Developer's Guide",
+      "company": "Udemy",
+      "id": "UC-KNGV26V3",
+      "url": "https://www.udemy.com/certificate/UC-KNGV26V3/",
+      "issued": "2017-11-01T03:00:00.000Z",
+      "logo": {
+        "url": "./assets/certificates/udemy.png",
+        "width": 60
+      }
+    },
+    {
+      "title": "MTA C#",
+      "company": "Certiport",
+      "id": "yqQR-XVNa",
+      "url": "https://verify.certiport.com",
+      "issued": "2015-11-01T03:00:00.000Z",
+      "logo": {
+        "url": "./assets/certificates/certiport.png",
+        "width": 80
+      }
+    }
+  ],
+  "skills": [
+    { "title": "HTML / CSS", "percentage": 90 },
+    { "title": "NodeJS / Javascript", "percentage": 90 },
+    { "title": "Typescript", "percentage": 80 },
+    { "title": "Docker", "percentage": 50 },
+    { "title": "Go", "percentage": 32 },
+    { "title": "Python", "percentage": 65 },
+    { "title": "PHP", "percentage": 55 },
+    { "title": "Electron", "percentage": 80 },
+    { "title": "React", "percentage": 92 },
+    { "title": "React Native", "percentage": 83 },
+    { "title": "GraphQL", "percentage": 84 },
+    { "title": "Redux", "percentage": 93 },
+    { "title": "Serverless", "percentage": 54 },
+    { "title": "SQL", "percentage": 55 },
+    { "title": "NoSQL (MongoDB)", "percentage": 52 },
+    { "title": "GIT", "percentage": 83 },
+    {
+      "title": "English",
+      "title_i18n": {
+        "en": "English",
+        "es": "Inglés"
+      },
+      "percentage": 95
+    }
+  ],
+  "portfolio": [
+    {
+      "id": "threejs-demo",
+      "title": {
+        "en": "AI + ThreeJS Demo",
+        "es": "AI + ThreeJS Demo"
+      },
+      "description": {
+        "en": "Customize your 3D shirt using AI.",
+        "es": "Personaliza tu polera utilizando Inteligencia Artificial."
+      },
+      "image": "./assets/portfolio/threejs-demo.gif",
+      "url": "https://shirt.gpuente.me/",
+      "repo": "https://github.com/gpuente/custom-shirt"
+    },
+    {
+      "id": "onboarding-demo-rn",
+      "title": {
+        "en": "Mobile Onboarding Demo",
+        "es": "Mobile Onboarding Demo"
+      },
+      "description": {
+        "en": "Mobile onboarding demo app built with React Native, Reanimated 3 and Lottie.",
+        "es": "Demo onboarding animado para mobile. Desarrollado con React Native, Reanimated 3 y Lottie"
+      },
+      "image": "./assets/portfolio/onboarding-demo-rn.gif",
+      "url": "https://github.com/gpuente/onboarding-demo-rn/releases/tag/1.0.0",
+      "repo": "https://github.com/gpuente/onboarding-demo-rn"
+    },
+    {
+      "id": "evernote-mobile",
+      "title": {
+        "en": "Evernote Mobile",
+        "es": "Evernote Mobile"
+      },
+      "description": {
+        "en": "Mobile client for Evernote. Available for iOS and Android.",
+        "es": "Cliente Mobile para Evernote. Disponible para iOS y Android."
+      },
+      "image": "./assets/portfolio/en-mobile.png",
+      "url": "https://evernote.com/download",
+      "repo": ""
+    },
+    {
+      "id": "evernote-desktop",
+      "title": {
+        "en": "Evernote Desktop",
+        "es": "Evernote Desktop"
+      },
+      "description": {
+        "en": "Desktop client for Evernote. Available for Windows, Linux and OSX.",
+        "es": "Cliente desktop para Evernote. Disponible para Windows, Linux y OSX."
+      },
+      "image": "./assets/portfolio/en-desktop.jpg",
+      "url": "https://evernote.com/download",
+      "repo": ""
+    },
+    {
+      "id": "evernote-web",
+      "title": {
+        "en": "Evernote Web",
+        "es": "Evernote Web"
+      },
+      "description": {
+        "en": "Web client for Evernote. Available for all modern browsers.",
+        "es": "Cliente Web para Evernote. Disponible para todos los navegadores modernos."
+      },
+      "image": "./assets/portfolio/en-web.jpeg",
+      "url": "https://evernote.com",
+      "repo": ""
+    },
+    {
+      "id": "plug-wallet",
+      "title": {
+        "en": "Plug Wallet",
+        "es": "Plug Wallet"
+      },
+      "description": {
+        "en": "Plug is a crypto wallet for the Internet Computer that allows you to hold, send, and swap ICP, Cycles, NFTs, and other tokens.",
+        "es": "Plug es una wallet crypto para Internet Computer que te permite almacenar, enviar y cambiar ICP, Cycles, NFTs y otros tokens."
+      },
+      "image": "./assets/portfolio/plug.jpeg",
+      "url": "https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm",
+      "repo": "https://github.com/Psychedelic/plug"
+    },
+    {
+      "id": "fleek",
+      "title": {
+        "en": "Fleek",
+        "es": "Fleek"
+      },
+      "description": {
+        "en": "Fleek makes it easy to build websites and apps on the new open web: permissionless, trustless, censorship resistant, and free of centralized gatekeepers.",
+        "es": "Fleek hace fácil construir sitios web y aplicaciones en la nueva web3: resistente a la censura y libre de gatekeepers centralizados."
+      },
+      "image": "./assets/portfolio/fleek.gif",
+      "url": "https://fleek.co/",
+      "repo": ""
+    },
+    {
+      "id": "space-desktop",
+      "title": {
+        "en": "Space Desktop",
+        "es": "Space Desktop"
+      },
+      "description": {
+        "en": "Dropbox like application to store your files with IPFS.",
+        "es": "Aplicación similar a Dropbox para almacenar tus archivos con IPFS."
+      },
+      "image": "./assets/portfolio/space-desktop.jpeg",
+      "url": "https://docs.fleek.co/space-desktop/overview/",
+      "repo": "https://github.com/FleekHQ/space-desktop"
+    },
+    {
+      "id": "groupon",
+      "title": {
+        "en": "Groupon",
+        "es": "Groupon"
+      },
+      "description": {
+        "en": "Find great deals on the best activities & things to do.",
+        "es": "Encuentra grandes ofertas en las mejores actividades y cosas para hacer."
+      },
+      "image": "./assets/portfolio/groupon.jpeg",
+      "url": "https://www.groupon.com/",
+      "repo": ""
+    },
+    {
+      "id": "comparaonline",
+      "title": {
+        "en": "ComparaOnline",
+        "es": "ComparaOnline"
+      },
+      "description": {
+        "en": "Access the best deals and purchase your Car Insurance, SOAP, and travel assistance. Get quotes and compare insurance, loans, credit cards, and much more.",
+        "es": "Encuentra los mejores descuentos y compra tu Seguro Automotriz, SOAP y asistencia en viaje. Cotiza y compara seguros, créditos, tarjetas de crédito y mucho más."
+      },
+      "image": "./assets/portfolio/compara.png",
+      "url": "https://www.comparaonline.cl/",
+      "repo": ""
+    },
+    {
+      "id": "manga-cli",
+      "title": {
+        "en": "Manga CLI",
+        "es": "Manga CLI"
+      },
+      "description": {
+        "en": "CLI tool to download mangas from inmanga.com. It supports chapters slection and PDF export.",
+        "es": "Una herramienta de CLI para descargar mangas desde inmanga.com. Soporta selección de capítulos y exportación a PDF."
+      },
+      "image": "./assets/portfolio/manga-cli.gif",
+      "url": "https://github.com/gpuente/manga-tools/releases/tag/v1.0.2",
+      "repo": "https://github.com/gpuente/manga-tools"
+    },
+    {
+      "id": "lqip",
+      "title": {
+        "en": "Lazy Load Image Component for React",
+        "es": "Lazy Load Image Component for React"
+      },
+      "description": {
+        "en": "Lazy Load your images using the LQIP technique with this React component.",
+        "es": "Carga de manera progresiva tus imágenes utilizando la técnica LQIP con este componente para React."
+      },
+      "image": "./assets/portfolio/lqip.gif",
+      "url": "https://lqip-react.surge.sh/",
+      "repo": "https://github.com/gpuente/lqip-img-react"
+    },
+    {
+      "id": "demo-app",
+      "title": {
+        "en": "React Native Demo App",
+        "es": "React Native Demo App"
+      },
+      "description": {
+        "en": "A React Native demo App. It includes a Gallery for Pexel.com, an animated picker and a Blur Carousel.",
+        "es": "Demo de una aplicación en React Native. Incluye una galería de imágenes de Pexel.com, un picker animado y un carrusel con blur."
+      },
+      "image": "./assets/portfolio/demo-app.gif",
+      "url": "https://github.com/gpuente/demo-app/blob/1b50d8baf215b2dec6aa9ccff8e92a5edfd40d84/demo/demo.gif",
+      "repo": "https://github.com/gpuente/demo-app"
+    }
+  ],
+  "blog": [
+    {
+      "id": "ab03ec14571c",
+      "title": "A way to improve SSR performance for React",
+      "description": "At ComparaOnline, one of our main goals was to improve the performance in our marketplace app to bring a better experience for our customers, and for us, as developers. That means, that we needed to make a lot of changes in our code, architecture, and how we handle some tasks...",
+      "image": "./assets/blog/ab03ec14571c.png",
+      "url": "https://medium.com/comparaonline/a-way-to-improve-ssr-performance-for-react-ab03ec14571c",
+      "repo": ""
+    }
+  ],
+  "contact": {
+    "header": {
+      "en": "Contact",
+      "es": "Contacto"
+    },
+    "title": {
+      "en": "How Can I Help You?",
+      "es": "En que te puedo ayudar?"
+    },
+    "channels": {
+      "phone": {
+        "en": "Do you have WhatsApp? Drop me a message!",
+        "es": "Tienes WhatsApp? Envíame un mensaje!"
+      },
+      "location": {
+        "en": "If you want to share a cup of coffee, I'm located in Santiago, Chile.",
+        "es": "Si quieres compartir una taza de café, estoy ubicado en Santiago, Chile."
+      },
+      "email": {
+        "en": "Have an idea? want to chat? just send me an email.",
+        "es": "Tienes una idea? Quieres charlar? envíame un email."
+      }
+    },
+    "form": {
+      "fields": {
+        "name": {
+          "placeholder": { "en": "Full Name", "es": "Nombre" },
+          "error": { "en": "Name is required.", "es": "Por favor ingresa tu nombre." }
+        },
+        "email": {
+          "placeholder": { "en": "Email Address", "es": "Correo Electrónico" },
+          "error": { "en": "Valid email is required.", "es": "Ingresa un correo electrónico válido" }
+        },
+        "subject": {
+          "placeholder": { "en": "Subject", "es": "Asunto" },
+          "error": { "en": "Subject is required.", "es": "Por favor ingresa un asunto" }
+        },
+        "message": {
+          "placeholder": { "en": "Message", "es": "Mensaje" },
+          "error": { "en": "Please, leave a message.", "es": "Por favor ingresa un mensaje" }
+        }
+      },
+      "submit": {
+        "en": "Send Message",
+        "es": "Enviar Mensaje"
+      },
+      "success": {
+        "en": "Message sent successfully!",
+        "es": "¡Mensaje enviado con éxito!"
+      },
+      "error": {
+        "en": "Ups! An error occurred sending the message. Please try again.",
+        "es": "Ups! Se produjo un error al enviar el mensaje. Inténtalo de nuevo."
+      }
+    }
+  },
+  "ui": {
+    "common": {
+      "download_cv": { "en": "Download CV", "es": "Descargar CV" },
+      "contact": { "en": "Contact", "es": "Contacto" },
+      "page_under_construction": { "en": "Page under construction", "es": "Página en construcción" }
+    },
+    "navbar": {
+      "home": { "en": "Home", "es": "Home" },
+      "resume": { "en": "Resume", "es": "Experiencia" },
+      "portfolio": { "en": "Portfolio", "es": "Portafolio" },
+      "blog": { "en": "Blog", "es": "Blog" },
+      "contact": { "en": "Contact", "es": "Contacto" }
+    },
+    "sections": {
+      "services": {
+        "title": { "en": "What I Do", "es": "Lo que puedo hacer" }
+      },
+      "resume": {
+        "title": { "en": "Resume", "es": "Curriculum" },
+        "education_title": { "en": "Education", "es": "Educación" },
+        "experience_title": { "en": "Experience", "es": "Experiencia" },
+        "certificates_title": { "en": "Certificates", "es": "Certificados" },
+        "certificates_membership_label": {
+          "en": "Membership ID: {{id}}",
+          "es": "ID de Certificado: {{id}}"
+        },
+        "skills_title": { "en": "Skills", "es": "Habilidades" }
+      },
+      "portfolio": {
+        "header": { "en": "Portfolio", "es": "Portafolio" }
+      },
+      "blog": {
+        "header": { "en": "Blog", "es": "Blog" }
+      }
+    }
+  }
+}
