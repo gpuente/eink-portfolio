@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(pnpm add *)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(pnpm exec *)",
+      "Bash(curl *)",
+      "WebFetch(domain:www.youtube.com)",
+      "Bash(git add *)"
     ]
   }
 }

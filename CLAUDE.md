@@ -1,6 +1,8 @@
-# CLAUDE.md — E-Ink Portfolio · Memo Puente
+# CLAUDE.md — E-Ink Portfolio · Guillermo Puente
 
 Technical reference for continuing development. Read this before touching any code.
+
+The subject of the portfolio is **Guillermo Puente Sandoval** — senior full-stack engineer based in Santiago, Chile, with 10+ years of experience (Evernote, Fleek, ComparaOnline, Groupon, Borealis). Source data for copy, work history, and projects lives in `data/portfolio.json`. The component derives its content from that file (hand-curated and rewritten for tone — not a straight copy-paste).
 
 ---
 
@@ -17,51 +19,118 @@ The key illusion is not "grayscale website" — it's **a screen you could touch*
 
 **If you add a feature, ask: would this feel at home on a Kindle?**
 
+### Voice / tone
+
+The copy is **professional and technical, not playful**. Substantive statements; no twee poetry. Lean toward the voice of an engineer writing documentation that happens to be well-crafted — a calm, precise register that fits the e-ink aesthetic without drifting into whimsy.
+
+- Good: "Senior full-stack engineer with 10+ years shipping products across web, mobile, and desktop."
+- Avoid: "Building small, quiet software from the bottom of the world."
+
+Technical terms (React, Go, gRPC, TypeScript, IPFS) stay in English in both locales. Italics are for emphasis only; no decorative italics.
+
 ---
 
 ## Architecture
 
-**Astro 6 + React 19 island.** The entire UI is a single React component (`src/components/EinkPortfolio.jsx`) mounted as a client-side island from `src/pages/index.astro`. Astro's role is just: HTML shell, favicon, meta, and hydrating the island with `client:load`. No routing — it's one continuous scroll page.
+**Astro 6 + React 19 island, TypeScript throughout.** The portfolio is a modular React tree mounted as a single client-side island from `src/pages/index.astro`. Astro's role is just: HTML shell, favicon, meta, and hydrating the island with `client:load`. No routing — it's one continuous scroll page.
+
+**All source files are TypeScript.** Components are `.tsx`; hooks, data, and utilities are `.ts`. No `.js` or `.jsx` — type-check with `pnpm exec astro check` before committing.
 
 ### File map
 ```
 astro.config.mjs               → @astrojs/react integration
 src/layouts/Layout.astro       → <html>/<head>/<body>. Sets title + resets margins globally
 src/pages/index.astro          → renders <EinkPortfolio client:load />
-src/components/EinkPortfolio.jsx → the whole portfolio (default export `App`)
-data/portfolio.json            → legacy portfolio data from the previous site; not yet wired in
-data/assets/                   → legacy assets (profile, blog, certificates, cv, portfolio)
+src/components/
+  EinkPortfolio.tsx            → root component. Owns mode/lang/refs/time state; composes everything below
+  eink/
+    data/
+      palettes.ts              → exports Mode, Palette, PALETTES (light/dark color tokens)
+      copy.ts                  → exports Lang, Copy, COPY.en / COPY.es (all user-facing strings)
+      projects.ts              → exports Project, PROJECTS (personal/OSS projects, bilingual notes)
+      talks.ts                 → exports Talk, TALKS (conference talks, bilingual)
+      experience.ts            → exports Experience, EXPERIENCE (work history, most recent first)
+      sections.ts              → exports SectionId, Section, SECTIONS(t) (dock entries with icons)
+      contact.ts               → exports ContactLink, contactLinks(t)
+    hooks/
+      useWeather.ts            → Open-Meteo (Santiago temp + WMO code). Exports WeatherData
+      useHumansInSpace.ts      → open-notify.org via corsproxy.io, falls back to 7
+      useBitcoin.ts            → CoinGecko price (USD)
+      useGitHub.ts             → public_repos + latest PushEvent for gpuente. Exports GitHubData
+      useMoonPhase.ts          → client-side astronomy. Exports MoonPhase
+      useScrollSpy.ts          → bounding-rect scroll spy. Exports SectionRefs
+    ui/
+      GlobalStyles.tsx         → the <style> block (grain, mono, dock-btn, hover, media queries)
+      SurfaceLayers.tsx        → grain + vignette + inset-shadow overlays
+      StatusBar.tsx            → fixed top bar (composes StatusStat/MoonGlyph/WeatherIcon + toggles)
+      StatusStat.tsx           → one labeled metric (icon + LABEL + value)
+      MoonGlyph.tsx            → SVG moon phase
+      WeatherIcon.tsx          → WMO code → lucide icon
+      Dock.tsx                 → fixed bottom pill navigation
+      Divider.tsx              → section break (§ label between two rules)
+    sections/
+      HomeSection.tsx          → hero, CTAs, status grid, GitHub activity strip
+      AboutSection.tsx         → bio paragraphs + "Currently" card
+      ProjectsSection.tsx      → project list with live/repo links
+      TalksSection.tsx         → conference talks list (title, event, year, description, video link)
+      WorkSection.tsx          → experience timeline with role details per job
+      ContactSection.tsx       → contact rows
+    util/
+      timeAgo.ts               → relative-time helper for the GitHub push timestamp
+
+data/portfolio.json            → SOURCE DATA for copy/projects/experience. Hand-curated into eink/data/*
+data/assets/                   → screenshots/gifs of past projects (not yet wired into the UI)
 public/                        → favicon.ico, favicon.svg
-eink-portfolio.jsx             → reference source of truth at repo root. `src/components/EinkPortfolio.jsx` must stay in sync with it.
 ```
 
-The component is hydrated with `client:load` (not `client:idle` or `client:visible`) because the status bar, theme toggle, and scroll spy all need to be interactive immediately on first paint.
+### Type conventions
+
+- **Palette / Mode:** exported from `data/palettes.ts`. Every UI component accepts `c: Palette` and, when relevant, `mode: Mode`.
+- **Copy / Lang:** exported from `data/copy.ts`. Components that render strings accept `t: Copy` and, when bilingual content from data arrays is needed, `lang: Lang`.
+- **SectionId:** the dock/scroll-spy use the union `"home" | "about" | "projects" | "work" | "contact"`. Keep this in sync if you add or rename a section.
+- **Refs:** `SectionRefs = Record<SectionId, RefObject<HTMLElement | null>>`.
+- **Hook return shapes** (`WeatherData`, `GitHubData`, `MoonPhase`) are co-located with their hook files — import the type from the same module.
+
+The component is hydrated with `client:load` (not `client:idle` or `client:visible`) because the status bar, theme toggle, and scroll spy all need to be interactive immediately on first paint. Because `client:load` still SSR-renders the component at build time, all sections (including projects/work/contact text) are present in the static HTML — good for SEO.
+
+### How to evolve content
+
+- **Strings:** add to both `COPY.en` and `COPY.es` in `src/components/eink/data/copy.ts`. Also update the `Copy` type if you add a new field — TS will then force every missing string to surface at check-time. Never hardcode.
+- **Projects:** append to `src/components/eink/data/projects.ts`. Each `Project` has `title`, `kind_en`, `kind_es`, `year`, `note_en`, `note_es`, `href: string | null`, `repo: string | null`, and optional `archived?: boolean` (use `/web/TIMESTAMPif_/ORIGINAL_URL` for archive.org links to hide the Wayback toolbar).
+- **Talks:** append to `src/components/eink/data/talks.ts`. Each `Talk` has `title_en`, `title_es`, `event_en`, `event_es`, `year`, `note_en`, `note_es`, `href` (the video URL), and optional `relatedProject` (cross-references a `Project.title`).
+- **Experience:** append to `src/components/eink/data/experience.ts`. Fields: `role_en`, `role_es`, `org`, `when`, `place_en`, `place_es`, `detail_en`, `detail_es`.
+- **Contact:** edit `src/components/eink/data/contact.ts`.
+- **Source of truth:** `data/portfolio.json` has the raw résumé data. When rewriting, pull facts from there but rephrase for the e-ink voice described above.
 
 ### Section order
 ```
-Home → About → Projects → Work → Contact
+Home → About → Projects → Talks → Work → Contact
 ```
 
-The order matters because the floating dock and the scroll spy both depend on it. If you reorder sections, update in **three places** inside `src/components/EinkPortfolio.jsx`:
-1. `SECTIONS(t)` array (drives the dock)
-2. `<section>` elements in the `<main>` JSX
-3. `§ 01 / § 02 / § 03 / § 04` labels in both `COPY.en` and `COPY.es`
+The order matters because the floating dock and the scroll spy both depend on it. If you reorder sections, update in **four places**:
+1. The `SectionId` union in `src/components/eink/data/sections.ts`
+2. `SECTIONS(t)` array in the same file (drives the dock)
+3. `<section>` elements in the `<main>` JSX of `src/components/EinkPortfolio.tsx`
+4. `§ 01 / § 02 / § 03 / § 04 / § 05` labels in both `COPY.en` and `COPY.es` in `src/components/eink/data/copy.ts`
 
 ### Key components
-| Component | Role |
-|---|---|
-| `App` | Root. Holds mode/lang/active state, scroll spy, refs |
-| `StatusBar` | Fixed top bar. Live data + toggles |
-| `StatusStat` | Single labeled metric in the status bar (icon + LABEL + value) |
-| `Dock` | Fixed bottom pill. Navigation + scroll-to |
-| `Divider` | Section break between content blocks |
-| `HomeSection` | Hero + CTAs + status grid + GitHub activity strip |
-| `AboutSection` | Bio + "Currently" card |
-| `ProjectsSection` | Project list with bilingual descriptions |
-| `WorkSection` | Experience timeline |
-| `ContactSection` | Links + colophon |
-| `MoonGlyph` | SVG moon phase visualization |
-| `WeatherIcon` | Maps WMO weather codes to lucide icons |
+| Component | Path | Role |
+|---|---|---|
+| `EinkPortfolio` | `src/components/EinkPortfolio.tsx` | Root. Owns mode/lang/active/time state, refs, scroll-to. Composes everything below. |
+| `GlobalStyles` | `eink/ui/GlobalStyles.tsx` | The dynamic `<style>` block (reads `c.paper`) |
+| `SurfaceLayers` | `eink/ui/SurfaceLayers.tsx` | The three fixed overlay layers (grain, vignette, inset shadow) |
+| `StatusBar` | `eink/ui/StatusBar.tsx` | Fixed top bar. Live data + toggles |
+| `StatusStat` | `eink/ui/StatusStat.tsx` | Single labeled metric (icon + LABEL + value) |
+| `Dock` | `eink/ui/Dock.tsx` | Fixed bottom pill. Navigation + scroll-to |
+| `Divider` | `eink/ui/Divider.tsx` | Section break between content blocks |
+| `MoonGlyph` | `eink/ui/MoonGlyph.tsx` | SVG moon phase visualization |
+| `WeatherIcon` | `eink/ui/WeatherIcon.tsx` | WMO weather code → lucide icon |
+| `HomeSection` | `eink/sections/HomeSection.tsx` | Hero + CTAs + status grid + GitHub activity strip |
+| `AboutSection` | `eink/sections/AboutSection.tsx` | Bio + "Currently" card |
+| `ProjectsSection` | `eink/sections/ProjectsSection.tsx` | Project list (live/repo links) |
+| `TalksSection` | `eink/sections/TalksSection.tsx` | Conference talks with video links |
+| `WorkSection` | `eink/sections/WorkSection.tsx` | Experience timeline with role details |
+| `ContactSection` | `eink/sections/ContactSection.tsx` | Contact rows |
 
 ---
 
@@ -257,22 +326,22 @@ Uses `gap: 1` on the grid parent with `background: c.inkFaint` — the 1px gap b
 
 ## Adding New Sections
 
-1. Add the section id to `refs` object (keep the order: home → about → projects → work → contact → YOUR_NEW_SECTION)
-2. Add a `<Divider>` + `<section ref={refs.xxx} data-section="xxx">` in the `<main>` JSX in the correct position
-3. Add the section label to `SECTIONS(t)` array (drives the dock)
-4. Add all strings to both `COPY.en` and `COPY.es`
-5. Create the section component following the existing pattern: receives `c` (colors) and `t` (copy) as props
-6. Update the `§` numbering if inserting between existing sections
+1. Create `src/components/eink/sections/YourSection.tsx`, following the existing pattern: type a `Props` object with `c: Palette` and `t: Copy`; for bilingual data-driven sections also accept `lang: Lang`.
+2. In `src/components/eink/data/sections.ts`: extend the `SectionId` union with your new id and add the section entry to `SECTIONS(t)` (drives the dock).
+3. In `src/components/EinkPortfolio.tsx`: add a ref (`your: useRef<HTMLElement | null>(null)`), import the section, and add `<Divider c={c} label={t.sectionYour} />` + `<section ref={refs.your} data-section="your">` in the `<main>` JSX at the correct position.
+4. In `src/components/eink/data/copy.ts`: add all strings (including `nav.your` and `sectionYour`) to the `Copy` type and to both `COPY.en` and `COPY.es`.
+5. Update the `§` numbering in existing section labels if inserting between existing sections.
+6. Run `pnpm exec astro check` — the `SectionId` union will flag every place you still need to update.
 
 ---
 
 ## Adding New Status Bar Metrics
 
-1. Create a `useYourData()` hook following the pattern: `useState(null)` → `useEffect` fetch → `.catch(() => fallback)`
-2. Call the hook in `App`, pass the value down to `StatusBar`
-3. Add a `<StatusStat>` in the status bar with: icon (lucide component), label (3–5 char uppercase), value, title (tooltip)
-4. Add `status-hide-sm` or `status-hide-xs` class if it should collapse on narrow viewports
-5. Add a `<span className="status-divider ...">` before it
+1. Create `src/components/eink/hooks/useYourData.ts` following the pattern: `useState<T | null>(null)` → `useEffect` fetch → `.catch(() => fallback)`. Export both the hook and its return type.
+2. In `src/components/EinkPortfolio.tsx`: call the hook and pass the value down to `<StatusBar />`.
+3. In `src/components/eink/ui/StatusBar.tsx`: add the new prop to the `Props` type and render a `<StatusStat>` with icon (lucide component), label (3–5 char uppercase), value, title (tooltip).
+4. Add `status-hide-sm` or `status-hide-xs` class if the metric should collapse on narrow viewports.
+5. Add a `<span className="status-divider ...">` before the new stat to match the visual rhythm.
 
 ---
 
@@ -292,18 +361,26 @@ Uses `gap: 1` on the grid parent with `background: c.inkFaint` — the 1px gap b
 ## Dependencies
 
 - `astro` 6 + `@astrojs/react` 5 (the host framework; only job is to render the React island)
-- `react` / `react-dom` 19 (hooks: useState, useEffect, useRef)
-- `lucide-react` **pinned to 0.474.0** — later versions dropped the `Github` brand icon. If you bump this, you must replace `<Github />` in the status bar with an alternative (e.g. inline SVG or `GitBranch`)
-- Icons used: Home, Briefcase, User, Mail, FolderGit2, Sun, Moon, ArrowUpRight, MapPin, Cloud, CloudRain, CloudSnow, CloudFog, CloudLightning, Rocket, Bitcoin, Languages, Github, CircleDot
+- `react` / `react-dom` 19 with `@types/react` / `@types/react-dom` (hooks: useState, useEffect, useRef)
+- `typescript` + `@astrojs/check` (dev deps) — run `pnpm exec astro check` for a full typecheck across `.astro` + `.ts` + `.tsx`
+- `lucide-react` **pinned to 0.474.0** — later versions dropped the `Github` brand icon (also emits a `ts(6385)` deprecation hint on use; expected and documented). If you bump this, you must replace `<Github />` in the status bar with an alternative (e.g. inline SVG or `GitBranch`)
+- Icons used: Home, Briefcase, User, Mail, FolderGit2, Mic, Sun, Moon, ArrowUpRight, MapPin, Cloud, CloudRain, CloudSnow, CloudFog, CloudLightning, Rocket, Bitcoin, Languages, Github, CircleDot
 - Google Fonts: Newsreader (serif), JetBrains Mono (monospace) — loaded via `@import` inside the component's `<style>` block
 
 No Tailwind. No CSS frameworks. Styles are inline React styles + one `<style>` block (rendered inside the component) for animations, grain texture, and responsive media queries.
 
 ### Scripts
 ```
-pnpm dev      → astro dev (local server, HMR)
-pnpm build    → astro build (static output to dist/)
-pnpm preview  → astro preview (serve dist/)
+pnpm dev              → astro dev (local server, HMR)
+pnpm build            → astro build (static output to dist/)
+pnpm preview          → astro preview (serve dist/)
+pnpm exec astro check → full TypeScript + Astro type check
 ```
+
+---
+
+## Git conventions
+
+- **Never include a `Co-Authored-By: Claude ...` trailer (or any AI co-author footer) in commit messages.** Plain subject + body only.
 
 Package manager is **pnpm**. Node version pinned to `>=22.12.0` in package.json.
