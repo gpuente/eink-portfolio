@@ -13,6 +13,15 @@ const EnvSchema = z.object({
   MAX_HISTORY_MESSAGES: z.coerce.number().int().positive().default(10),
   MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().default(500),
   RETRIEVAL_SIMILARITY_FLOOR: z.coerce.number().min(0).max(1).default(0.4),
+
+  // Calendly (for the check-availability + book-slot agent tools)
+  CALENDLY_PAT: z.string().min(1, "CALENDLY_PAT is required"),
+  CALENDLY_USER_URI: z.string().url("CALENDLY_USER_URI must be a valid URL"),
+  CALENDLY_EVENT_TYPE_URI: z.string().url("CALENDLY_EVENT_TYPE_URI must be a valid URL"),
+  CALENDLY_SCHEDULING_URL: z.string().url("CALENDLY_SCHEDULING_URL must be a valid URL"),
+  // IANA timezone used as the default when the caller/user doesn't supply one.
+  // This is Guillermo's timezone; the bookSlot tool accepts a per-request override.
+  CALENDLY_DEFAULT_TZ: z.string().default("America/Santiago"),
 });
 
 const parsed = EnvSchema.safeParse(process.env);
