@@ -36,11 +36,16 @@ import DeviceReveal from "./eink/ui/DeviceReveal";
  *  animation runs across these final pixels (progress 0 → 1). */
 const REVEAL_HEIGHT = 500;
 
+const MODE_STORAGE_KEY = "eink-mode";
+
 export default function EinkPortfolio() {
   const [mode, setMode] = useState<Mode>("light");
   const [lang, setLang] = useState<Lang>("en");
   const [now, setNow] = useState<Date>(new Date());
   const [chatOpen, setChatOpen] = useState<boolean>(false);
+  // Gates the localStorage write effect so the default "light" doesn't
+  // clobber the saved value on first mount before the read effect runs.
+  const [hydrated, setHydrated] = useState<boolean>(false);
 
   const refs: SectionRefs = {
     home: useRef<HTMLElement | null>(null),
@@ -71,6 +76,29 @@ export default function EinkPortfolio() {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
+
+  // Read the persisted theme once on mount; gated by typeof checks because
+  // the component is rendered server-side at build time via client:load.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = window.localStorage.getItem(MODE_STORAGE_KEY);
+      if (saved === "light" || saved === "dark") setMode(saved);
+    } catch {
+      // localStorage can throw in private-mode Safari / sandboxed iframes — ignore.
+    }
+    setHydrated(true);
+  }, []);
+
+  // Persist the theme whenever the user toggles it (after hydration).
+  useEffect(() => {
+    if (!hydrated || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(MODE_STORAGE_KEY, mode);
+    } catch {
+      // Same rationale as above — swallow quota/permission errors.
+    }
+  }, [hydrated, mode]);
 
   /**
    * Keep the browser chrome colour in sync with the in-app mode toggle.
