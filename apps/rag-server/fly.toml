@@ -1,0 +1,47 @@
+# fly.toml — @portfolio/rag-server
+#
+# Deploy from the monorepo ROOT (paths below are relative to that):
+#   fly deploy -c apps/rag-server/fly.toml
+#
+# Secrets are injected at runtime — never bake them into the image.
+# Set them once with:
+#   fly secrets set OPENAI_API_KEY=... ASTRA_DB_APPLICATION_TOKEN=... \
+#     ASTRA_DB_API_ENDPOINT=... ASTRA_DB_KEYSPACE=default_keyspace \
+#     CALENDLY_PAT=... CALENDLY_USER_URI=... CALENDLY_EVENT_TYPE_URI=... \
+#     CALENDLY_SCHEDULING_URL=... CORS_ORIGIN=https://your-portfolio.com \
+#     -c apps/rag-server/fly.toml
+
+app = "portfolio-rag-server"
+# Closest region to Chile — Fly has no Santiago POP; São Paulo is the only
+# South American option. Latency from SCL ≈ 35–55ms (vs ~140ms to IAD).
+primary_region = "gru"
+
+[build]
+  # Path relative to this fly.toml's directory (apps/rag-server/).
+  # The build CONTEXT is the directory `fly deploy` is invoked from — run it
+  # from the monorepo root so pnpm can see pnpm-lock.yaml + pnpm-workspace.yaml.
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "3001"
+  # Non-sensitive tunables can live here. Sensitive ones must be secrets.
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  # Scale to zero when idle — first request after a quiet period takes
+  # ~1–2s to wake the machine. Saves money on a low-traffic portfolio.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

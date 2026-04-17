@@ -1,0 +1,31 @@
+# Build-context ignore list. Applies to all Dockerfile builds rooted here
+# (currently: apps/rag-server/Dockerfile invoked via `fly deploy`).
+
+# Never ship installed deps — the image runs its own `pnpm install`
+**/node_modules
+**/.turbo
+**/dist
+**/.astro
+
+# Secrets. Must be injected at runtime (fly secrets), never baked in.
+**/.env
+**/.env.local
+**/.env.production
+# Note: .env.example IS shipped so the image includes the documented contract.
+
+# Git + editor + OS cruft
+.git
+.github
+.gitignore
+.vscode
+.idea
+.DS_Store
+.claude
+
+# Other apps — not needed by the rag-server image
+apps/web
+data/assets
+docs
+
+# Logs
+*.log
