@@ -103,7 +103,7 @@ const PERSON_JSONLD = {
 		<script type="application/ld+json" is:inline set:html={JSON.stringify(PERSON_JSONLD)}></script>
 		{gaMeasurementId && (
 			<>
-				<script async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
+				<script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
 				<script is:inline define:vars={{ gaMeasurementId }}>
 					(function () {
 						if (!gaMeasurementId) return;
