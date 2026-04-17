@@ -28,3 +28,9 @@ pnpm-debug.log*
 
 # playwright-mcp screenshots/snapshots scratch dir
 .playwright-mcp/
+
+# rag-server source documents — keep the folder (via .gitkeep) but
+# ignore the contents. Reference material may include personal data
+# (full CV, LinkedIn export, etc.) and shouldn't be tracked.
+apps/rag-server/sources/*
+!apps/rag-server/sources/.gitkeep
