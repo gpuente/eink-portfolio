@@ -29,6 +29,7 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, site).toString();
 const absoluteImage = /^https?:\/\//.test(image)
 	? image
 	: new URL(image, site).toString();
+const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID?.trim();
 
 // Person schema for search engines — helps Google show a rich result when
 // someone searches "Guillermo Puente". `sameAs` links the identity to the
@@ -100,6 +101,78 @@ const PERSON_JSONLD = {
 		{/* JSON-LD Person schema so Google can tie the site to the human and
 		    render a rich result for "Guillermo Puente" queries. */}
 		<script type="application/ld+json" is:inline set:html={JSON.stringify(PERSON_JSONLD)}></script>
+		{gaMeasurementId && (
+			<>
+				<script async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
+				<script is:inline define:vars={{ gaMeasurementId }}>
+					(function () {
+						if (!gaMeasurementId) return;
+
+						window.dataLayer = window.dataLayer || [];
+						window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+						window.gtag("js", new Date());
+						window.gtag("config", gaMeasurementId, {
+							send_page_view: false,
+							anonymize_ip: true,
+						});
+
+						var trackPageView = function () {
+							window.gtag("event", "page_view", {
+								page_title: document.title,
+								page_location: window.location.href,
+								page_path: window.location.pathname + window.location.search,
+							});
+						};
+
+						if (!window.__einkGaPageLoadListener) {
+							document.addEventListener("astro:page-load", trackPageView);
+							window.__einkGaPageLoadListener = true;
+						}
+
+						if (!window.__einkGaClickListener) {
+							document.addEventListener("click", function (event) {
+								if (!(event.target instanceof Element)) return;
+								var anchor = event.target.closest("a[href]");
+								if (!anchor) return;
+
+								var href = anchor.getAttribute("href");
+								if (!href || href.startsWith("#")) return;
+
+								var url;
+								try {
+									url = new URL(href, window.location.href);
+								} catch (_) {
+									return;
+								}
+
+								var isOutbound = url.origin !== window.location.origin;
+								var isDownload = /\.(pdf|zip|docx?|xlsx?|pptx?|csv)$/i.test(url.pathname);
+
+								if (isOutbound) {
+									window.gtag("event", "click", {
+										event_category: "outbound",
+										event_label: url.href,
+										link_url: url.href,
+										outbound: true,
+									});
+								}
+
+								if (isDownload) {
+									var fileName = url.pathname.split("/").pop() || "unknown";
+									window.gtag("event", "file_download", {
+										file_name: fileName,
+										link_url: url.href,
+									});
+								}
+							});
+							window.__einkGaClickListener = true;
+						}
+
+						trackPageView();
+					})();
+				</script>
+			</>
+		)}
 		{/* Astro's SPA-style router: intercepts same-origin anchor clicks,
 		    fetches the target, and swaps the body without a full reload.
 		    Browser back/forward work natively. Scripts in the swapped
