@@ -1,8 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import EinkPortfolio from '../components/EinkPortfolio.tsx';
+import BootOverlay from '../components/eink/ui/BootOverlay.astro';
 ---
 
 <Layout>
+	{/* Fullscreen boot splash that covers the SSR paint until React
+	    hydrates. No-op unless PUBLIC_ENABLE_BOOT_OVERLAY=true at build
+	    time. See the component for lifecycle details. */}
+	<BootOverlay />
 	<EinkPortfolio client:load />
 </Layout>

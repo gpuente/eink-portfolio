@@ -38,21 +38,9 @@ const LANGS: CvLang[] = ["en", "es"];
   title="Guillermo Puente · CV"
   description="Curriculum vitae — Senior Software Engineer with 10+ years across web, mobile, desktop, and AI integration."
 >
-  <!-- Apply the persisted language BEFORE any content paints so the
-       right block is shown on the first frame. Runs synchronously at
-       the top of <body> so CSS selectors keyed on `html[data-lang]`
-       match before the browser lays out anything. -->
-  <script is:inline>
-    (function () {
-      try {
-        var saved = localStorage.getItem("eink-lang");
-        var lang = saved === "es" || saved === "en" ? saved : "en";
-        document.documentElement.setAttribute("data-lang", lang);
-      } catch (_) {
-        document.documentElement.setAttribute("data-lang", "en");
-      }
-    })();
-  </script>
+  <!-- Layout.astro's head-level pre-paint script has already set
+       `html[data-lang]` from localStorage (shared "eink-lang" key),
+       so the right-language block is visible on the first frame. -->
 
   <!-- Screen-only e-ink surface layers. Print CSS hides them. -->
   <div class="grain" aria-hidden="true"></div>

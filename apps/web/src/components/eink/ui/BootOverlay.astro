@@ -1,0 +1,193 @@
+---
+/**
+ * Fullscreen boot overlay shown on `/` until the React island
+ * (EinkPortfolio) hydrates and settles its language + theme state.
+ * Covers the SSR HTML so the user never sees a EN→ES flash on refresh
+ * when Spanish is the saved language.
+ *
+ * Controlled by PUBLIC_ENABLE_BOOT_OVERLAY (build-time):
+ *   - "true"  → rendered; covers first paint; fades out when React
+ *     signals ready (or after 3.5s fallback if JS never runs)
+ *   - anything else → not rendered; fast path, no overhead
+ *
+ * Visual: paper background + iOS-style activity indicator + "BOOTING"
+ * label, centered. Kept deliberately simple — this runs on every
+ * refresh, so subtle beats elaborate.
+ */
+
+const ENABLED = import.meta.env.PUBLIC_ENABLE_BOOT_OVERLAY === "true";
+---
+
+{
+  ENABLED && (
+    <div id="boot-overlay" class="boot-overlay" aria-hidden="true" role="presentation">
+      <div class="boot-inner">
+        {/* iOS-style activity indicator: 12 segments arranged in a
+            circle, each on a 1.2s fade loop, staggered by 1/12 of a
+            cycle. Classic rotating-fade illusion in pure CSS. */}
+        <div class="boot-spinner" aria-label="Loading" role="progressbar">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <span class="boot-spinner-bar" style={`--i: ${i}`} />
+          ))}
+        </div>
+        <span class="boot-label">BOOTING</span>
+      </div>
+    </div>
+
+    <script is:inline>
+      (function () {
+        var overlay = document.getElementById("boot-overlay");
+        if (!overlay) return;
+
+        // Minimum on-screen time. Without it the overlay feels like a
+        // flicker on fast networks — 50ms visible + fade is "wait, did
+        // something happen?". ~1.2s lets the spinner cycle cleanly.
+        var MIN_DISPLAY_MS = 1200;
+        var shownAt =
+          typeof performance !== "undefined" && performance.now
+            ? performance.now()
+            : Date.now();
+
+        var scheduled = false;
+        var removed = false;
+
+        function fadeAndRemove() {
+          if (removed) return;
+          removed = true;
+          overlay.classList.add("boot-overlay-hide");
+          overlay.addEventListener(
+            "transitionend",
+            function onEnd(e) {
+              if (e.propertyName !== "opacity") return;
+              overlay.removeEventListener("transitionend", onEnd);
+              overlay.remove();
+            },
+          );
+        }
+
+        function dismiss() {
+          if (scheduled) return;
+          scheduled = true;
+          var now =
+            typeof performance !== "undefined" && performance.now
+              ? performance.now()
+              : Date.now();
+          var elapsed = now - shownAt;
+          var wait = Math.max(0, MIN_DISPLAY_MS - elapsed);
+          setTimeout(fadeAndRemove, wait);
+        }
+
+        // Primary path: React sets `body.eink-ready` after hydration.
+        if (document.body.classList.contains("eink-ready")) {
+          dismiss();
+        } else {
+          var observer = new MutationObserver(function () {
+            if (document.body.classList.contains("eink-ready")) {
+              observer.disconnect();
+              dismiss();
+            }
+          });
+          observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ["class"],
+          });
+        }
+
+        // Fallback: if React never mounts (JS error, bundle blocked,
+        // very slow network), don't strand the user on the boot screen.
+        setTimeout(dismiss, 3500);
+      })();
+    </script>
+
+    <style is:global>
+      /* Light palette is the default; dark is keyed on `html[data-mode]`
+         which the Layout's pre-paint script sets from localStorage
+         before the first paint. Users who saved dark mode see the boot
+         splash in dark too — no light → dark flash. */
+      .boot-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e8e4db; /* PALETTES.light.paper */
+        opacity: 1;
+        pointer-events: auto;
+        transition: opacity 500ms ease;
+        will-change: opacity;
+      }
+      html[data-mode="dark"] .boot-overlay {
+        background: #3a3a36; /* PALETTES.dark.paper */
+      }
+      .boot-overlay-hide {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .boot-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+      }
+
+      /* ────────────────────────────────────────────────────────────────
+         iOS-style activity indicator — 12 bars arranged in a circle,
+         each fading on a staggered 1.2s loop. The rotating-fade
+         illusion is pure CSS: one keyframe, 12 rotated bars, 12
+         negative animation-delays so each starts mid-cycle.
+      ─────────────────────────────────────────────────────────────── */
+      .boot-spinner {
+        position: relative;
+        width: 32px;
+        height: 32px;
+      }
+      .boot-spinner-bar {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 2.5px;
+        height: 9px;
+        margin-left: -1.25px;
+        background: #2b2a27; /* PALETTES.light.ink */
+        border-radius: 1.25px;
+        /* Rotate around the spinner centre (half of width/height). */
+        transform-origin: 1.25px 16px;
+        transform: rotate(calc(var(--i) * 30deg));
+        animation: boot-spinner-fade 1.2s linear infinite;
+        /* Delays go from -1.1s (bar 0, at 12 o'clock) to 0 (bar 11, at
+           11 o'clock). Bar 11 is brightest at t=0, next frame the
+           brightness hops to bar 0 (12 o'clock), then bar 1, 2… — i.e.
+           the bright spot sweeps CLOCKWISE. Inverting the sign here
+           would make the fade go counter-clockwise, which feels wrong
+           vs. iOS's native indicator. All delays are ≤ 0 so each bar
+           is already mid-animation on frame 1 (no all-bars-bright
+           flash at boot). */
+        animation-delay: calc((var(--i) - 11) * 0.1s);
+      }
+      @keyframes boot-spinner-fade {
+        0% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.15;
+        }
+      }
+      html[data-mode="dark"] .boot-spinner-bar {
+        background: #dcd8cd; /* PALETTES.dark.ink */
+      }
+
+      .boot-label {
+        font-size: 10px;
+        letter-spacing: 0.4em;
+        color: #6b6860; /* PALETTES.light.inkSoft */
+        text-transform: uppercase;
+      }
+      html[data-mode="dark"] .boot-label {
+        color: #9a968c; /* PALETTES.dark.inkSoft */
+      }
+    </style>
+  )
+}

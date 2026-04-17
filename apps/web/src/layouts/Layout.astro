@@ -25,6 +25,36 @@ const {
 		    dynamically when the user toggles the in-app light/dark switch. */}
 		<meta name="theme-color" content="#e8e4db" media="(prefers-color-scheme: light)" />
 		<meta name="theme-color" content="#3a3a36" media="(prefers-color-scheme: dark)" />
+		{/* Pre-paint: read the saved language and theme from localStorage
+		    and stash them on `window` so the React island's useState
+		    initializers (EinkPortfolio) pick them up on the first client
+		    render, not after a useEffect. Also sets `html[data-lang]` so
+		    the /cv page's CSS selectors match before first paint.
+
+		    This doesn't fully eliminate the EN→ES flash on `/` (the SSR
+		    HTML already shipped in EN), but it avoids a second render
+		    pass and fixes the CV page's language flash completely. The
+		    optional boot overlay (PUBLIC_ENABLE_BOOT_OVERLAY) handles
+		    the remaining SSR-paint window on the home page. */}
+		<script is:inline>
+			(function () {
+				try {
+					var lang = localStorage.getItem("eink-lang");
+					lang = lang === "es" || lang === "en" ? lang : "en";
+					var mode = localStorage.getItem("eink-mode");
+					mode = mode === "light" || mode === "dark" ? mode : "light";
+					window.__einkLang = lang;
+					window.__einkMode = mode;
+					document.documentElement.setAttribute("data-lang", lang);
+					document.documentElement.setAttribute("data-mode", mode);
+				} catch (_) {
+					window.__einkLang = "en";
+					window.__einkMode = "light";
+					document.documentElement.setAttribute("data-lang", "en");
+					document.documentElement.setAttribute("data-mode", "light");
+				}
+			})();
+		</script>
 	</head>
 	<body>
 		<slot />

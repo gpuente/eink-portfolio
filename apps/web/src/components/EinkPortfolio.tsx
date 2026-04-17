@@ -39,14 +39,40 @@ const REVEAL_HEIGHT = 500;
 const MODE_STORAGE_KEY = "eink-mode";
 const LANG_STORAGE_KEY = "eink-lang";
 
+/**
+ * Layout.astro stashes the saved language/theme on `window.__einkLang`
+ * and `window.__einkMode` via an inline pre-paint script (see its
+ * `<head>`), so our useState initializers below can read them on the
+ * first client render — no flicker from a useEffect re-render.
+ *
+ * During Astro SSR `window` is undefined; we fall back to the defaults,
+ * which is what the generated HTML will ship with. React 18 recovers
+ * gracefully from the resulting client/SSR mismatch — the optional
+ * boot overlay (Option B) hides the transition when the visual flash
+ * is unwanted.
+ */
+declare global {
+  interface Window {
+    __einkLang?: Lang;
+    __einkMode?: Mode;
+  }
+}
+
+function readInitialMode(): Mode {
+  if (typeof window === "undefined") return "light";
+  return window.__einkMode ?? "light";
+}
+
+function readInitialLang(): Lang {
+  if (typeof window === "undefined") return "en";
+  return window.__einkLang ?? "en";
+}
+
 export default function EinkPortfolio() {
-  const [mode, setMode] = useState<Mode>("light");
-  const [lang, setLang] = useState<Lang>("en");
+  const [mode, setMode] = useState<Mode>(readInitialMode);
+  const [lang, setLang] = useState<Lang>(readInitialLang);
   const [now, setNow] = useState<Date>(new Date());
   const [chatOpen, setChatOpen] = useState<boolean>(false);
-  // Gates the localStorage write effect so the hardcoded defaults don't
-  // clobber the saved value on first mount before the read effect runs.
-  const [hydrated, setHydrated] = useState<boolean>(false);
 
   const refs: SectionRefs = {
     home: useRef<HTMLElement | null>(null),
@@ -78,42 +104,35 @@ export default function EinkPortfolio() {
     return () => clearInterval(id);
   }, []);
 
-  // Read persisted theme + language once on mount; gated by typeof checks
-  // because the component is rendered server-side at build time via
-  // client:load. The CV page (/cv) writes to the same keys from vanilla JS,
-  // so preferences stay in sync across the portfolio and the CV.
+  // Persist the theme whenever the user toggles it. First-mount runs
+  // write the same value the pre-paint script already read, so the
+  // write is idempotent and safe to fire unconditionally.
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const savedMode = window.localStorage.getItem(MODE_STORAGE_KEY);
-      if (savedMode === "light" || savedMode === "dark") setMode(savedMode);
-      const savedLang = window.localStorage.getItem(LANG_STORAGE_KEY);
-      if (savedLang === "en" || savedLang === "es") setLang(savedLang);
+      window.localStorage.setItem(MODE_STORAGE_KEY, mode);
     } catch {
       // localStorage can throw in private-mode Safari / sandboxed iframes — ignore.
     }
-    setHydrated(true);
-  }, []);
+  }, [mode]);
 
-  // Persist the theme whenever the user toggles it (after hydration).
   useEffect(() => {
-    if (!hydrated || typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(MODE_STORAGE_KEY, mode);
-    } catch {
-      // Same rationale as above — swallow quota/permission errors.
-    }
-  }, [hydrated, mode]);
-
-  // Persist the language whenever the user toggles it (after hydration).
-  useEffect(() => {
-    if (!hydrated || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(LANG_STORAGE_KEY, lang);
     } catch {
       // Same rationale as above.
     }
-  }, [hydrated, lang]);
+  }, [lang]);
+
+  // Signal to the boot overlay (when enabled) that React has hydrated
+  // with the correct state so it can fade out. Runs once on mount after
+  // the first paint — any lingering SSR content has already been
+  // reconciled by React by the time this effect fires.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.classList.add("eink-ready");
+  }, []);
 
   /**
    * Keep the browser chrome colour in sync with the in-app mode toggle.
