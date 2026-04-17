@@ -13,6 +13,7 @@ import { useGitHub } from "./eink/hooks/useGitHub";
 import { useMoonPhase } from "./eink/hooks/useMoonPhase";
 import { useScrollSpy } from "./eink/hooks/useScrollSpy";
 import type { SectionRefs } from "./eink/hooks/useScrollSpy";
+import { useDeviceReveal } from "./eink/hooks/useDeviceReveal";
 
 import GlobalStyles from "./eink/ui/GlobalStyles";
 import SurfaceLayers from "./eink/ui/SurfaceLayers";
@@ -29,6 +30,11 @@ import TalksSection from "./eink/sections/TalksSection";
 import WorkSection from "./eink/sections/WorkSection";
 import BackgroundSection from "./eink/sections/BackgroundSection";
 import ContactSection from "./eink/sections/ContactSection";
+import DeviceReveal from "./eink/ui/DeviceReveal";
+
+/** Extra scroll space at the bottom of the document. The device reveal
+ *  animation runs across these final pixels (progress 0 → 1). */
+const REVEAL_HEIGHT = 500;
 
 export default function EinkPortfolio() {
   const [mode, setMode] = useState<Mode>("light");
@@ -47,6 +53,10 @@ export default function EinkPortfolio() {
   };
   const scrollLock = useRef<boolean>(false);
   const [active, setActive] = useScrollSpy(refs, scrollLock);
+  const rawRevealProgress = useDeviceReveal(REVEAL_HEIGHT);
+  // Don't run the reveal while the chat panel is open — the panel is z:65
+  // and would sit under the z:9000 device overlay, which looks broken.
+  const revealProgress = chatOpen ? 0 : rawRevealProgress;
 
   const c = PALETTES[mode];
   const t = COPY[lang];
@@ -160,24 +170,36 @@ export default function EinkPortfolio() {
         </section>
 
         <Divider c={c} label={t.sectionContact} />
-        <section ref={refs.contact} data-section="contact">
-          <ContactSection c={c} t={t} />
-        </section>
-
-        <div
-          className="mono"
-          style={{
-            marginTop: 80,
-            fontSize: 10,
-            color: c.inkFaint,
-            letterSpacing: ".3em",
-            textTransform: "uppercase",
-            textAlign: "center",
-          }}
+        {/* Contact gets `minHeight: 100vh` so that when the user jumps to it
+            from the dock (scrollIntoView → Contact top at viewport top), the
+            viewport bottom stays inside Contact instead of reaching into the
+            reveal spacer below — otherwise the device animation would start
+            the moment you click the Contact dock button. */}
+        <section
+          ref={refs.contact}
+          data-section="contact"
+          style={{ minHeight: "100vh" }}
         >
-          {t.end}
-        </div>
+          <ContactSection c={c} t={t} />
+          <div
+            className="mono"
+            style={{
+              marginTop: 80,
+              fontSize: 10,
+              color: c.inkFaint,
+              letterSpacing: ".3em",
+              textTransform: "uppercase",
+              textAlign: "center",
+            }}
+          >
+            {t.end}
+          </div>
+        </section>
       </main>
+
+      {/* Spacer: the last `REVEAL_HEIGHT` pixels of the document are used to
+          drive the device-reveal animation. Empty, aria-hidden. */}
+      <div aria-hidden="true" style={{ height: REVEAL_HEIGHT }} />
 
       <ChatPanel
         c={c}
@@ -192,8 +214,16 @@ export default function EinkPortfolio() {
         - Mobile: a single horizontal flex row centered at bottom (so dock + bubble feel like one bar with a gap).
         - Desktop: dock stays centered alone, bubble breaks out to the far-right.
         Layout switches via media queries in GlobalStyles → `.bottom-bar`.
+        Fades out during the device reveal so the "zoom into a Kindle" effect
+        isn't interrupted by a floating nav pill.
       */}
-      <div className="bottom-bar">
+      <div
+        className="bottom-bar"
+        style={{
+          opacity: 1 - revealProgress,
+          transition: revealProgress === 0 || revealProgress === 1 ? "opacity 240ms ease" : undefined,
+        }}
+      >
         <Dock c={c} t={t} active={active} onGo={scrollTo} mode={mode} />
         <ChatBubble
           c={c}
@@ -203,6 +233,15 @@ export default function EinkPortfolio() {
           onToggle={() => setChatOpen((v) => !v)}
         />
       </div>
+
+      <DeviceReveal
+        progress={revealProgress}
+        c={c}
+        mode={mode}
+        time={time}
+        date={date}
+        endLabel={t.end}
+      />
     </div>
   );
 }
