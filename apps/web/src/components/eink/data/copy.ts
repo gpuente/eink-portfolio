@@ -104,7 +104,7 @@ export const COPY: Record<Lang, Copy> = {
     heroEm: "intersection of AI, product, and Web3",
     heroB: ".",
     tagline:
-      "Senior full-stack engineer with 10+ years shipping products at MakerDAO SES, Evernote, Fleek, Groupon, and ComparaOnline — focused on AI integration (LLMs, RAG, agents) and on using Claude Code to accelerate delivery across large monorepos.",
+      "Senior full-stack engineer with 10+ years shipping products at MakerDAO SES, Evernote, Fleek, Groupon, and ComparaOnline — focused on AI integration (LLMs, RAG, agents) and on an agent-driven workflow that accelerates delivery across large monorepos.",
 
     ctaProjects: "See projects",
     ctaContact: "Get in touch",
@@ -228,7 +228,7 @@ export const COPY: Record<Lang, Copy> = {
     heroEm: "intersección entre IA, producto y Web3",
     heroB: ".",
     tagline:
-      "Ingeniero full-stack senior con más de 10 años enviando productos en MakerDAO SES, Evernote, Fleek, Groupon y ComparaOnline — enfocado en integración de IA (LLMs, RAG, agents) y en usar Claude Code para acelerar la entrega en monorepos grandes.",
+      "Ingeniero full-stack senior con más de 10 años enviando productos en MakerDAO SES, Evernote, Fleek, Groupon y ComparaOnline — enfocado en integración de IA (LLMs, RAG, agents) y en un flujo de desarrollo basado en agentes que acelera la entrega en monorepos grandes.",
 
     ctaProjects: "Ver proyectos",
     ctaContact: "Hablemos",
