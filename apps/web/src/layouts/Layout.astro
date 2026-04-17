@@ -20,6 +20,11 @@ const {
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 		<meta name="description" content={description} />
+		{/* Mobile browser chrome colour. Baseline matches the current mode via
+		    prefers-color-scheme; EinkPortfolio also updates the first tag
+		    dynamically when the user toggles the in-app light/dark switch. */}
+		<meta name="theme-color" content="#e8e4db" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#3a3a36" media="(prefers-color-scheme: dark)" />
 	</head>
 	<body>
 		<slot />

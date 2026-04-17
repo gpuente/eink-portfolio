@@ -73,6 +73,26 @@ export default function EinkPortfolio() {
   }, []);
 
   /**
+   * Keep the browser chrome colour in sync with the in-app mode toggle.
+   * Layout.astro ships two <meta name="theme-color"> tags scoped to
+   * prefers-color-scheme for the pre-hydration paint; once React is live, the
+   * user's in-app choice wins, so we collapse to a single active tag with no
+   * media attribute pointing at the current paper colour.
+   */
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const tags = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
+    tags.forEach((tag, i) => {
+      if (i === 0) {
+        tag.removeAttribute("media");
+        tag.setAttribute("content", c.paper);
+      } else {
+        tag.remove();
+      }
+    });
+  }, [c.paper]);
+
+  /**
    * Mobile only: when the chat panel is open it takes over the viewport, so we
    * lock background page scroll. Cleared on close (or unmount) so the lock
    * never leaks. Desktop is exempt — the small floating panel doesn't cover

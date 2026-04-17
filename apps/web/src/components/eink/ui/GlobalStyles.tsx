@@ -163,6 +163,14 @@ export default function GlobalStyles({ c }: Props) {
         box-shadow: 0 14px 34px -16px rgba(60,50,30,.55), 0 6px 14px -6px rgba(60,50,30,.32) !important;
       }
 
+      /* Chat textarea. 14px on desktop matches the messages; on mobile we bump
+         to 16px because iOS Safari auto-zooms into any input/textarea with a
+         font-size under 16px on focus, which forces the user to pinch-zoom out. */
+      .chat-input { font-size: 14px; }
+      @media (max-width: 719px) {
+        .chat-input { font-size: 16px; }
+      }
+
       /* Chat thinking indicator — three dots fading in/out */
       @keyframes chat-pulse {
         0%, 100% { opacity: 0.4; }

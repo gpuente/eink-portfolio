@@ -308,6 +308,7 @@ export default function ChatPanel({ c, mode, t, open, onClose }: Props) {
       >
         <textarea
           ref={inputRef}
+          className="chat-input"
           value={input}
           onChange={onInputChange}
           onKeyDown={onKeyDown}
@@ -322,7 +323,6 @@ export default function ChatPanel({ c, mode, t, open, onClose }: Props) {
             borderRadius: 10,
             color: c.ink,
             fontFamily: "inherit",
-            fontSize: 14,
             lineHeight: 1.5,
             padding: "10px 12px",
             outline: "none",
