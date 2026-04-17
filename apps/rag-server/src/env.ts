@@ -14,6 +14,11 @@ const EnvSchema = z.object({
   MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().default(500),
   RETRIEVAL_SIMILARITY_FLOOR: z.coerce.number().min(0).max(1).default(0.4),
 
+  // GitHub (for the getGithubActivity agent tool).
+  // Both optional: if GITHUB_TOKEN is absent we hit the public API (60 req/h per IP).
+  GITHUB_USERNAME: z.string().default("gpuente"),
+  GITHUB_TOKEN: z.string().optional(),
+
   // Calendly (for the check-availability + book-slot agent tools)
   CALENDLY_PAT: z.string().min(1, "CALENDLY_PAT is required"),
   CALENDLY_USER_URI: z.string().url("CALENDLY_USER_URI must be a valid URL"),

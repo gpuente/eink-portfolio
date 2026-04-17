@@ -13,6 +13,7 @@ import {
   formatLocal,
   PUBLIC_SCHEDULING_URL,
 } from "./lib/calendly.ts";
+import { getGithubInfo } from "./lib/github.ts";
 
 /**
  * Returns the final system prompt with the CURRENT UTC timestamp injected at
@@ -88,6 +89,19 @@ When the user wants to book a 30-min meeting with Guillermo, or asks about his a
 - Never invent slots. Only propose times that \`checkAvailability\` returned.
 - Don't collect name/email in chat — that's an anti-pattern here (Calendly re-asks, annoys the user).
 - Don't call \`bookSlot\` on speculative times the user only *mentioned* — wait for them to confirm the slot they want.
+
+## GitHub activity (getGithubActivity tool)
+
+When the user asks about Guillermo's **current coding activity**, recent commits/pushes, his open-source repos, GitHub stats, or what he's been working on lately, call **\`getGithubActivity\`** — this is LIVE public GitHub data (cached ~5 min), not his static CV.
+
+Pick the narrowest \`kind\` that fits:
+- \`profile\` — account metadata (bio, followers, public repo count, location, account age)
+- \`recent_activity\` — last ~20 public events (pushes with commit messages, PRs, releases, new repos, stars)
+- \`top_repos\` — 10 most-starred owned repos (name, description, language, stars, forks, topics)
+- \`languages\` — aggregated language usage across all owned repos (primary language per repo)
+- \`all\` — everything at once. Use this for broad questions like "what's he been up to lately?" or "give me a summary of his GitHub".
+
+When quoting repo names, link to the \`url\` field. When showing recent activity, quote the commit messages verbatim and mention the repo + relative time ("2 days ago"). Do NOT use \`searchProfile\` for these questions — the CV is stale; GitHub is live.
 
 ## Tone
 Calm, professional, factual. Friendly on greetings, but not effusive. Match the e-ink aesthetic of the site — measured and precise, not playful.`;
@@ -217,6 +231,28 @@ app.post("/chat", async (c) => {
             return {
               error: e instanceof Error ? e.message : "Unknown error",
               publicSchedulingUrl: PUBLIC_SCHEDULING_URL,
+            };
+          }
+        },
+      }),
+
+      getGithubActivity: tool({
+        description:
+          "Fetch live public GitHub data for Guillermo's profile (cached ~5 min). Use when the user asks about his recent coding activity, open-source repos, what he's been pushing lately, GitHub stats, or most-starred projects. This is LIVE data — prefer it over searchProfile for anything about 'current' or 'recent' activity. Pick the narrowest `kind` that fits the question (use 'all' only for broad summary asks).",
+        inputSchema: z.object({
+          kind: z
+            .enum(["profile", "recent_activity", "top_repos", "languages", "all"])
+            .describe(
+              "profile = account metadata (bio, followers, public repos, location). recent_activity = last ~20 public events (pushes, PRs, releases, stars). top_repos = 10 most-starred owned repos. languages = aggregated primary-language count across owned repos. all = everything (use for broad 'what's he up to' questions).",
+            ),
+        }),
+        execute: async ({ kind }) => {
+          try {
+            return await getGithubInfo(kind);
+          } catch (e) {
+            return {
+              error: e instanceof Error ? e.message : "Unknown error",
+              profileUrl: `https://github.com/${env.GITHUB_USERNAME}`,
             };
           }
         },
