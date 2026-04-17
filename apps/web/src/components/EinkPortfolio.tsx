@@ -19,6 +19,8 @@ import SurfaceLayers from "./eink/ui/SurfaceLayers";
 import StatusBar from "./eink/ui/StatusBar";
 import Dock from "./eink/ui/Dock";
 import Divider from "./eink/ui/Divider";
+import ChatBubble from "./eink/ui/ChatBubble";
+import ChatPanel from "./eink/ui/ChatPanel";
 
 import HomeSection from "./eink/sections/HomeSection";
 import AboutSection from "./eink/sections/AboutSection";
@@ -32,6 +34,7 @@ export default function EinkPortfolio() {
   const [mode, setMode] = useState<Mode>("light");
   const [lang, setLang] = useState<Lang>("en");
   const [now, setNow] = useState<Date>(new Date());
+  const [chatOpen, setChatOpen] = useState<boolean>(false);
 
   const refs: SectionRefs = {
     home: useRef<HTMLElement | null>(null),
@@ -58,6 +61,22 @@ export default function EinkPortfolio() {
     const id = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(id);
   }, []);
+
+  /**
+   * Mobile only: when the chat panel is open it takes over the viewport, so we
+   * lock background page scroll. Cleared on close (or unmount) so the lock
+   * never leaks. Desktop is exempt — the small floating panel doesn't cover
+   * the page so scrolling behind it is fine.
+   */
+  useEffect(() => {
+    if (typeof document === "undefined" || !chatOpen) return;
+    const isMobile = window.matchMedia("(max-width: 719px)").matches;
+    if (!isMobile) return;
+    document.body.classList.add("chat-locked-mobile");
+    return () => {
+      document.body.classList.remove("chat-locked-mobile");
+    };
+  }, [chatOpen]);
 
   const scrollTo = (id: SectionId) => {
     scrollLock.current = true;
@@ -160,7 +179,30 @@ export default function EinkPortfolio() {
         </div>
       </main>
 
-      <Dock c={c} t={t} active={active} onGo={scrollTo} mode={mode} />
+      <ChatPanel
+        c={c}
+        mode={mode}
+        t={t.chat}
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+      />
+
+      {/*
+        Bottom bar: dock + chat bubble.
+        - Mobile: a single horizontal flex row centered at bottom (so dock + bubble feel like one bar with a gap).
+        - Desktop: dock stays centered alone, bubble breaks out to the far-right.
+        Layout switches via media queries in GlobalStyles → `.bottom-bar`.
+      */}
+      <div className="bottom-bar">
+        <Dock c={c} t={t} active={active} onGo={scrollTo} mode={mode} />
+        <ChatBubble
+          c={c}
+          mode={mode}
+          open={chatOpen}
+          title={t.chat.bubbleTitle}
+          onToggle={() => setChatOpen((v) => !v)}
+        />
+      </div>
     </div>
   );
 }

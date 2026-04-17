@@ -59,8 +59,11 @@ export default function GlobalStyles({ c }: Props) {
 
       /* Ensure the button itself captures clicks across its entire padded area.
          Without this, SVG icons from lucide-react can absorb pointer events
-         on their stroke paths, leaving the center of small buttons un-clickable. */
-      button * { pointer-events: none; }
+         on their stroke paths, leaving the center of small buttons un-clickable.
+         The cursor: inherit rule keeps the button pointer cursor visible even
+         when the user is hovering directly over the icon (otherwise the cursor
+         falls through to whatever the icon default cursor is). */
+      button * { pointer-events: none; cursor: inherit; }
 
       .underline-hover { position: relative; }
       .underline-hover::after {
@@ -76,6 +79,135 @@ export default function GlobalStyles({ c }: Props) {
       }
       @media (max-width: 520px) {
         .status-hide-xs { display: none !important; }
+      }
+
+      /* Bottom bar — wraps the dock + chat bubble.
+         - Mobile (< 720px): flex row centered, gap between dock and bubble.
+         - Desktop (>= 720px): full-width container; dock self-centers,
+           bubble pinned to far right. pointer-events let the empty space pass through. */
+      .bottom-bar {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        /* z below the chat panel (65) so the panel input isn't covered when fullscreen on mobile */
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: calc(100vw - 16px);
+      }
+      @media (min-width: 720px) {
+        .bottom-bar {
+          left: 0;
+          right: 0;
+          max-width: none;
+          transform: none;
+          display: block;
+          pointer-events: none;
+        }
+        .bottom-bar > * { pointer-events: auto; position: absolute; bottom: 0; }
+        .bottom-bar .eink-dock { left: 50%; transform: translateX(-50%); }
+        .bottom-bar .chat-bubble { right: 16px; }
+      }
+
+      /* Mobile: drop the dock label entirely. display:none (vs max-width: 0)
+         also kills the flex gap between the icon and the label, so the dock
+         width stays compact enough for the bubble to fit beside it. */
+      @media (max-width: 719px) {
+        .dock-label { display: none !important; }
+
+        /* When the chat panel is fullscreen-open on mobile, freeze background scroll
+           so only the message list inside the chat scrolls. Cleared when chat closes. */
+        body.chat-locked-mobile {
+          overflow: hidden !important;
+          touch-action: none;
+          overscroll-behavior: none;
+        }
+      }
+
+      /* Status-bar tooltip. Trigger element gets class .has-tooltip + a
+         data-tooltip attribute. Right-anchored so the tooltip flows leftward
+         (fits the right side of the status bar where the live-data items live). */
+      .has-tooltip { position: relative; }
+      .has-tooltip::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        top: calc(100% + 10px);
+        right: 0;
+        background: ${c.paperBright};
+        color: ${c.ink};
+        border: 1px solid ${c.inkFaint};
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 10px;
+        letter-spacing: .04em;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease 120ms, transform 180ms ease 120ms;
+        transform: translateY(-2px);
+        z-index: 90;
+        box-shadow: 0 8px 18px -10px rgba(60,50,30,.4);
+      }
+      .has-tooltip:hover::after,
+      .has-tooltip:focus-visible::after {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Chat bubble — subtle hover lift, calm motion (e-ink-friendly) */
+      .chat-bubble:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 34px -16px rgba(60,50,30,.55), 0 6px 14px -6px rgba(60,50,30,.32) !important;
+      }
+
+      /* Chat thinking indicator — three dots fading in/out */
+      @keyframes chat-pulse {
+        0%, 100% { opacity: 0.4; }
+        50%      { opacity: 1; }
+      }
+      .chat-thinking { animation: chat-pulse 1.2s ease-in-out infinite; }
+
+      /* Chip hover (only on devices that support hover, so mobile taps stay flat) */
+      @media (hover: hover) {
+        .chat-chip:hover { background: ${c.paper} !important; }
+      }
+
+      /* Panel layout: full-screen on mobile, floating window on desktop.
+         Animated open/close via opacity + translate (no spring/scale). */
+      .chat-panel {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 200ms ease, transform 200ms ease;
+      }
+      .chat-panel-open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* Mobile: fullscreen takeover */
+      @media (max-width: 719px) {
+        .chat-panel {
+          inset: 0;
+          border-radius: 0;
+          transform: translateY(8px);
+        }
+        .chat-panel-open { transform: translateY(0); }
+      }
+
+      /* Desktop: small floating window anchored above the bubble (right edge). */
+      @media (min-width: 720px) {
+        .chat-panel {
+          right: 16px;
+          bottom: 84px;
+          width: min(380px, calc(100vw - 32px));
+          height: min(560px, calc(100vh - 120px));
+          border-radius: 16px;
+          transform: translateY(8px);
+        }
+        .chat-panel-open { transform: translateY(0); }
       }
     `}</style>
   );

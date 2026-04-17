@@ -15,12 +15,8 @@ export default function Dock({ c, t, active, onGo, mode }: Props) {
   const sections = SECTIONS(t);
   return (
     <div
+      className="eink-dock"
       style={{
-        position: "fixed",
-        bottom: 24,
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 60,
         display: "flex",
         alignItems: "center",
         gap: 4,
@@ -63,13 +59,14 @@ export default function Dock({ c, t, active, onGo, mode }: Props) {
           >
             <Icon size={15} strokeWidth={isActive ? 2 : 1.6} />
             <span
-              className="mono"
+              className="mono dock-label"
               style={{
                 fontSize: 10,
                 letterSpacing: ".18em",
                 textTransform: "uppercase",
+                whiteSpace: "nowrap",
                 opacity: isActive ? 1 : 0,
-                maxWidth: isActive ? 90 : 0,
+                maxWidth: isActive ? 120 : 0,
                 overflow: "hidden",
                 transition: "opacity 260ms ease, max-width 260ms ease",
               }}

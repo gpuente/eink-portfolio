@@ -6,7 +6,8 @@ type Props = {
   iconEl: ReactNode;
   label: string;
   value: ReactNode;
-  title?: string;
+  /** Rich custom tooltip (rendered on hover via the `.has-tooltip` CSS rule). */
+  tooltip?: string;
   hideClass?: string;
   valueHideClass?: string;
 };
@@ -14,21 +15,26 @@ type Props = {
 /**
  * A single labeled metric in the top status bar.
  * Renders: icon + tiny uppercase label + value. The label always stays
- * visible so the number is never ambiguous.
+ * visible so the number is never ambiguous. When a `tooltip` is provided,
+ * a styled tooltip appears on hover (via the global `.has-tooltip` rule).
  */
 export default function StatusStat({
   c,
   iconEl,
   label,
   value,
-  title,
+  tooltip,
   hideClass = "",
   valueHideClass = "",
 }: Props) {
+  const classes = ["status-item", tooltip ? "has-tooltip" : "", hideClass]
+    .filter(Boolean)
+    .join(" ");
   return (
     <span
-      className={`status-item ${hideClass}`}
-      title={title}
+      className={classes}
+      data-tooltip={tooltip}
+      aria-label={tooltip}
       style={{ display: "flex", alignItems: "center", gap: 5 }}
     >
       {iconEl}

@@ -72,6 +72,20 @@ export type Copy = {
 
   loading: string;
   offline: string;
+
+  chat: {
+    bubbleTitle: string;
+    panelTitle: string;
+    panelSubtitle: string;
+    placeholder: string;
+    sendLabel: string;
+    closeLabel: string;
+    emptyHint: string;
+    starterChips: [string, string, string];
+    thinking: string;
+    error: string;
+    poweredBy: string;
+  };
 };
 
 export const COPY: Record<Lang, Copy> = {
@@ -166,6 +180,24 @@ export const COPY: Record<Lang, Copy> = {
 
     loading: "…",
     offline: "offline",
+
+    chat: {
+      bubbleTitle: "Ask about Guillermo",
+      panelTitle: "Ask about Guillermo",
+      panelSubtitle: "AI assistant grounded in his profile, projects, and CV.",
+      placeholder: "Ask anything…",
+      sendLabel: "Send message",
+      closeLabel: "Close chat",
+      emptyHint: "Ask me anything about Guillermo's work, projects, or background.",
+      starterChips: [
+        "What AI work has he done?",
+        "What is he building right now?",
+        "What's his current tech stack?",
+      ],
+      thinking: "Thinking…",
+      error: "Something went wrong. Try again in a moment.",
+      poweredBy: "Powered by retrieval over his portfolio.",
+    },
   },
 
   es: {
@@ -259,5 +291,23 @@ export const COPY: Record<Lang, Copy> = {
 
     loading: "…",
     offline: "sin conexión",
+
+    chat: {
+      bubbleTitle: "Pregúntale sobre Guillermo",
+      panelTitle: "Pregúntale sobre Guillermo",
+      panelSubtitle: "Asistente de IA con contexto de su perfil, proyectos y CV.",
+      placeholder: "Preguntá lo que quieras…",
+      sendLabel: "Enviar mensaje",
+      closeLabel: "Cerrar chat",
+      emptyHint: "Preguntame sobre el trabajo, los proyectos o la trayectoria de Guillermo.",
+      starterChips: [
+        "¿Qué trabajo en IA ha hecho?",
+        "¿Qué está construyendo ahora?",
+        "¿Cuál es su stack actual?",
+      ],
+      thinking: "Pensando…",
+      error: "Algo salió mal. Probá de nuevo en un momento.",
+      poweredBy: "Impulsado por retrieval sobre su portafolio.",
+    },
   },
 };

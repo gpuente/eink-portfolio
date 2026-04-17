@@ -20,6 +20,22 @@ export function useScrollSpy(
   useEffect(() => {
     const onScroll = () => {
       if (scrollLock.current) return;
+
+      // Edge case: at the bottom of the page, the last section's top may still
+      // be below `topOffset` (because the section is too short to scroll up
+      // that far), leaving the spy stuck on the previous section. Force-select
+      // the last id when we hit the bottom.
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      if (atBottom) {
+        const ids = Object.keys(refs) as SectionId[];
+        const last = ids[ids.length - 1];
+        if (last) {
+          setActive(last);
+          return;
+        }
+      }
+
       let current: SectionId = initial;
       let bestDist = Infinity;
       for (const [id, ref] of Object.entries(refs) as Array<[SectionId, RefObject<HTMLElement | null>]>) {
