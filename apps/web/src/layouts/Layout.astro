@@ -109,7 +109,7 @@ const PERSON_JSONLD = {
 						if (!gaMeasurementId) return;
 
 						window.dataLayer = window.dataLayer || [];
-						window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+						window.gtag = window.gtag || function (...args) { window.dataLayer.push(args); };
 						const analyticsState = window.__einkAnalytics || (window.__einkAnalytics = {
 							pageLoadListenerAdded: false,
 							clickListenerAdded: false,
@@ -145,7 +145,7 @@ const PERSON_JSONLD = {
 								let url;
 								try {
 									url = new URL(href, window.location.href);
-								} catch (_) {
+								} catch (_error) {
 									return;
 								}
 
