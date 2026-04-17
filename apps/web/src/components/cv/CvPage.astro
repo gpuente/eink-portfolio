@@ -30,6 +30,7 @@
 import Layout from "../../layouts/Layout.astro";
 import { CV_COPY, type CvLang } from "./copy";
 import CvLangToggle from "./CvLangToggle";
+import CvThemeToggle from "./CvThemeToggle";
 
 const LANGS: CvLang[] = ["en", "es"];
 ---
@@ -56,10 +57,11 @@ const LANGS: CvLang[] = ["en", "es"];
       <span data-cv-lang="es">{CV_COPY.es.backLabel}</span>
     </a>
     <div class="top-bar-right">
-      {/* Reuses the portfolio's StatusBar ToggleButton for pixel-parity.
-          Rendered client-only because its label depends on localStorage,
-          which is a client concern. */}
+      {/* Reuses the portfolio's StatusBar ToggleButton + ThemeSwitch
+          for pixel-parity. Both rendered client-only because their
+          visuals depend on localStorage, which is a client concern. */}
       <CvLangToggle client:only="react" />
+      <CvThemeToggle client:only="react" />
       {/* Direct PDF download. One <a> per language in the DOM; the
           data-cv-lang CSS rule shows only the active one, so clicking
           always grabs the right file. The `download` attribute forces
@@ -224,13 +226,25 @@ const LANGS: CvLang[] = ["en", "es"];
   /* Design tokens — contrast bumped from the portfolio's #2b2a27 to
      #1a1a1a to reduce visual fatigue on the beige paper. --ink-soft
      lightened slightly to preserve the hierarchy between primary and
-     secondary text. Paper warmed from #e8e4db to #ebe7de. */
+     secondary text. Paper warmed from #e8e4db to #ebe7de.
+
+     Dark palette is keyed on `html[data-mode="dark"]`, which the Layout
+     pre-paint script sets from localStorage before first paint (shared
+     `eink-mode` key with the main portfolio). CvThemeToggle in the top
+     bar flips the attribute at runtime. */
   :root {
     --paper: #ebe7de;
     --paper-bright: #f3efe6;
     --ink: #1a1a1a;
     --ink-soft: #595651;
     --ink-faint: #9c9890;
+  }
+  html[data-mode="dark"] {
+    --paper: #3a3a36;
+    --paper-bright: #44443f;
+    --ink: #dcd8cd;
+    --ink-soft: #9a968c;
+    --ink-faint: #6b675f;
   }
 
   * { box-sizing: border-box; }
@@ -275,6 +289,15 @@ const LANGS: CvLang[] = ["en", "es"];
     mix-blend-mode: multiply;
     opacity: 0.7;
   }
+  /* Dark grain: white dots + screen blend so the texture shows against
+     the dark paper background (multiply would hide into black). */
+  html[data-mode="dark"] .grain {
+    background-image:
+      radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      radial-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+    mix-blend-mode: screen;
+    opacity: 0.5;
+  }
   .vignette {
     z-index: 99;
     background: radial-gradient(
@@ -282,6 +305,14 @@ const LANGS: CvLang[] = ["en", "es"];
       transparent 55%,
       rgba(80, 65, 40, 0.06) 90%,
       rgba(80, 65, 40, 0.1) 100%
+    );
+  }
+  html[data-mode="dark"] .vignette {
+    background: radial-gradient(
+      ellipse at center,
+      transparent 55%,
+      rgba(0, 0, 0, 0.2) 90%,
+      rgba(0, 0, 0, 0.35) 100%
     );
   }
 
@@ -561,6 +592,16 @@ const LANGS: CvLang[] = ["en", "es"];
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
       color-adjust: exact !important;
+    }
+
+    /* Always print in light mode regardless of the active theme. A
+       dark-background PDF wastes ink and is harder to read on paper. */
+    html[data-mode="dark"] {
+      --paper: #ebe7de;
+      --paper-bright: #f3efe6;
+      --ink: #1a1a1a;
+      --ink-soft: #595651;
+      --ink-faint: #9c9890;
     }
 
     html {

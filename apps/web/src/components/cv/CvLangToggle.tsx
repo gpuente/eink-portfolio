@@ -2,53 +2,28 @@ import { useEffect, useState } from "react";
 import { Languages } from "lucide-react";
 
 import ToggleButton from "../eink/ui/ToggleButton";
-import type { Palette } from "../eink/data/palettes";
+import { PALETTES } from "../eink/data/palettes";
+import { useMode } from "./useMode";
 
 /**
- * Language toggle for the CV page. Reuses the same `ToggleButton` the
- * portfolio's StatusBar renders for its EN/ES switch, so the visual
- * matches pixel-for-pixel — with the CV's slightly warmer paper + higher
- * contrast ink applied via a CV-local palette.
+ * Language toggle for the standalone `/cv` route. Reuses the same
+ * `ToggleButton` the portfolio's StatusBar renders for its EN/ES
+ * switch, so the visuals match pixel-for-pixel — including the dark
+ * palette (the two toggles would otherwise drift when the user flipped
+ * the theme).
  *
  * State / persistence contract (shared with the main portfolio):
- *   - Reads `localStorage["eink-lang"]` at mount.
+ *   - Reads `localStorage["eink-lang"]` at mount (via `html[data-lang]`
+ *     which the Layout pre-paint script sets before first paint).
  *   - Writes the same key on every toggle.
- *   - Applies `<html data-lang="en|es">` so the CvPage CSS shows the
- *     matching `[data-cv-lang]` block.
- *   - Also mirrors the choice onto `<html lang>` for screen readers.
+ *   - Flips `<html data-lang>` so CvPage's CSS shows the matching
+ *     `[data-cv-lang]` block.
  *
- * The CvPage.astro template ships an inline pre-paint script that sets
- * `html[data-lang]` from localStorage before React boots — so the first
- * frame already renders the correct language. This component then takes
- * over on hydration and handles subsequent clicks.
- *
- * Rendered as `client:only="react"` so we don't SSR a button whose text
- * depends on localStorage (which only exists on the client). The
- * language block content is unaffected — both EN and ES blocks ship in
- * the static HTML regardless.
+ * Rendered as `client:only="react"` so we don't SSR a button whose
+ * label depends on localStorage.
  */
 
 const LANG_STORAGE_KEY = "eink-lang";
-
-/**
- * CV-local palette. Only `ink`, `inkSoft`, and `inkFaint` are consumed
- * by `ToggleButton`; the rest of the Palette fields are filled with
- * empty strings to satisfy the type and are not rendered.
- */
-const CV_PALETTE: Palette = {
-  paper: "#ebe7de",
-  paperBright: "#f3efe6",
-  ink: "#1a1a1a",
-  inkSoft: "#595651",
-  inkFaint: "#9c9890",
-  desk: "",
-  deviceBody: "",
-  bezel: "",
-  bezelDeep: "",
-  bezelHi: "",
-  screenShadow: "",
-  deviceShadow: "",
-};
 
 type Lang = "en" | "es";
 
@@ -67,13 +42,12 @@ function readInitialLang(): Lang {
 }
 
 export default function CvLangToggle() {
-  // Initialise from the DOM attribute that the inline pre-paint script
-  // already set, so the first client render shows the right label.
   const [lang, setLang] = useState<Lang>(readInitialLang);
+  // Subscribe to the current theme so the button's border / ink colours
+  // match the active palette — otherwise the toggle stays light-styled
+  // even when CvThemeToggle flips the page to dark.
+  const mode = useMode();
 
-  // Apply to the DOM + persist on every change (including the first,
-  // which is harmless if it matches what the pre-paint script already
-  // wrote).
   useEffect(() => {
     if (typeof document === "undefined") return;
     document.documentElement.setAttribute("data-lang", lang);
@@ -87,7 +61,7 @@ export default function CvLangToggle() {
 
   return (
     <ToggleButton
-      c={CV_PALETTE}
+      c={PALETTES[mode]}
       onClick={() => setLang((l) => (l === "en" ? "es" : "en"))}
       title={lang === "es" ? "Cambiar idioma" : "Switch language"}
     >

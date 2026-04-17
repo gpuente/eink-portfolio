@@ -67,9 +67,11 @@ export default function HomeSection({ c, t, onJump, gh, lang }: Props) {
 
       <div style={{ display: "flex", gap: 12, marginTop: 36, flexWrap: "wrap" }}>
         {/* CV — primary CTA. Recruiters scan for this first, so it wins
-            the solid style and the leftmost slot. Real anchor (not a
-            button) so it's a direct, shareable link to /cv and
-            middle-click / right-click work as expected. */}
+            the solid style and the leftmost slot. Real anchor: Astro's
+            `<ClientRouter />` (in Layout) intercepts same-origin clicks
+            and SPA-swaps to /cv without a full reload, so the boot
+            overlay doesn't replay on back. Middle-click / right-click
+            still work as a normal link. */}
         <a
           href="/cv"
           style={{

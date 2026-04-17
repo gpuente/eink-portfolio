@@ -34,10 +34,46 @@ const ENABLED = import.meta.env.PUBLIC_ENABLE_BOOT_OVERLAY === "true";
       </div>
     </div>
 
-    <script is:inline>
+    <!-- `data-astro-rerun` tells Astro's ClientRouter to re-execute this
+         inline script on every page-load event, even when swapping back
+         to a page it has already shown. Without it, on back-nav from
+         /cv the overlay HTML gets re-inserted but the dismiss logic
+         never fires and the user sees a stuck spinner. -->
+    <script is:inline data-astro-rerun>
       (function () {
+        // Register a one-time `astro:before-swap` listener that strips
+        // the overlay out of the INCOMING document on SPA back-nav —
+        // preventing the visual flash we'd get if we only removed it
+        // after the swap. Guarded by a window flag so re-running this
+        // script (e.g. `data-astro-rerun`) doesn't stack listeners.
+        if (!window.__einkBootSwapHookAttached) {
+          window.__einkBootSwapHookAttached = true;
+          document.addEventListener("astro:before-swap", function (e) {
+            if (!window.__einkBootShown) return;
+            var incoming =
+              e && e.newDocument
+                ? e.newDocument.getElementById("boot-overlay")
+                : null;
+            if (incoming) incoming.remove();
+          });
+        }
+
         var overlay = document.getElementById("boot-overlay");
         if (!overlay) return;
+
+        // Skip on in-app SPA navigations. Astro's ClientRouter re-runs
+        // inline scripts when a page's HTML is swapped in, so this script
+        // fires again every time the user navigates back to `/` from
+        // `/cv`. A window-scoped flag is the cheapest way to "run once
+        // per document": it survives SPA swaps (same document, same
+        // globals) but gets wiped on a full reload (new document → new
+        // window → flag undefined), which is exactly the behaviour we
+        // want.
+        if (window.__einkBootShown) {
+          overlay.remove();
+          return;
+        }
+        window.__einkBootShown = true;
 
         // Minimum on-screen time. Without it the overlay feels like a
         // flicker on fast networks — 50ms visible + fade is "wait, did

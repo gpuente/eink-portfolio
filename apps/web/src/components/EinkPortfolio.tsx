@@ -58,14 +58,43 @@ declare global {
   }
 }
 
+/**
+ * Read order:
+ *   1. `<html data-mode|data-lang>` — authoritative after SPA nav
+ *      (CvThemeToggle / CvLangToggle update the attribute directly).
+ *   2. `window.__einkX` — set by Layout's pre-paint script on the
+ *      initial full page load.
+ *   3. `localStorage` — last-resort fallback.
+ *   4. Hard-coded default.
+ */
 function readInitialMode(): Mode {
-  if (typeof window === "undefined") return "light";
-  return window.__einkMode ?? "light";
+  if (typeof document === "undefined") return "light";
+  const attr = document.documentElement.getAttribute("data-mode");
+  if (attr === "dark") return "dark";
+  if (attr === "light") return "light";
+  if (typeof window !== "undefined" && window.__einkMode) return window.__einkMode;
+  try {
+    const saved = window.localStorage.getItem(MODE_STORAGE_KEY);
+    if (saved === "dark" || saved === "light") return saved;
+  } catch {
+    // private-mode Safari / sandboxed iframe — fall through.
+  }
+  return "light";
 }
 
 function readInitialLang(): Lang {
-  if (typeof window === "undefined") return "en";
-  return window.__einkLang ?? "en";
+  if (typeof document === "undefined") return "en";
+  const attr = document.documentElement.getAttribute("data-lang");
+  if (attr === "es") return "es";
+  if (attr === "en") return "en";
+  if (typeof window !== "undefined" && window.__einkLang) return window.__einkLang;
+  try {
+    const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
+    if (saved === "en" || saved === "es") return saved;
+  } catch {
+    // Same rationale as above.
+  }
+  return "en";
 }
 
 export default function EinkPortfolio() {
@@ -104,11 +133,13 @@ export default function EinkPortfolio() {
     return () => clearInterval(id);
   }, []);
 
-  // Persist the theme whenever the user toggles it. First-mount runs
-  // write the same value the pre-paint script already read, so the
-  // write is idempotent and safe to fire unconditionally.
+  // Persist theme + mirror onto `<html data-mode>` so the CV page's CSS
+  // (which keys on the attribute) matches instantly when the user SPA-navigates
+  // there. First-mount writes the same value the pre-paint script already
+  // set, so the write is idempotent and safe to fire unconditionally.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    document.documentElement.setAttribute("data-mode", mode);
     try {
       window.localStorage.setItem(MODE_STORAGE_KEY, mode);
     } catch {
@@ -118,6 +149,7 @@ export default function EinkPortfolio() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    document.documentElement.setAttribute("data-lang", lang);
     try {
       window.localStorage.setItem(LANG_STORAGE_KEY, lang);
     } catch {

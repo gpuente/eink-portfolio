@@ -1,4 +1,6 @@
 ---
+import { ClientRouter } from "astro:transitions";
+
 type Props = {
 	title?: string;
 	description?: string;
@@ -25,6 +27,14 @@ const {
 		    dynamically when the user toggles the in-app light/dark switch. */}
 		<meta name="theme-color" content="#e8e4db" media="(prefers-color-scheme: light)" />
 		<meta name="theme-color" content="#3a3a36" media="(prefers-color-scheme: dark)" />
+		{/* Astro's SPA-style router: intercepts same-origin anchor clicks,
+		    fetches the target, and swaps the body without a full reload.
+		    Browser back/forward work natively. Scripts in the swapped
+		    content re-execute via `astro:page-load`; the BootOverlay
+		    uses a window-scoped flag (`window.__einkBootShown`) to skip
+		    replaying on in-app navigations while still showing on full
+		    reloads. */}
+		<ClientRouter />
 		{/* Pre-paint: read the saved language and theme from localStorage
 		    and stash them on `window` so the React island's useState
 		    initializers (EinkPortfolio) pick them up on the first client
