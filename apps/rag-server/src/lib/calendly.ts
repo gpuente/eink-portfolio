@@ -23,9 +23,10 @@ export type AvailableSlot = {
 export type BookingLink = {
   /**
    * Single-use Calendly URL with the specific slot pre-selected (via the
-   * `/-/{local-iso}?month=…&date=…` tail). The invitee clicks, lands on
-   * Calendly with the correct day + time already chosen, fills their
-   * name/email once, and confirms. 90-day expiry, single use.
+   * `/-/{local-iso}?month=…&date=…` tail) and the invitee's name + email
+   * pre-filled (via `&name=…&email=…`). The invitee clicks, lands on
+   * Calendly with everything filled, and only has to confirm. 90-day
+   * expiry, single use.
    */
   bookingUrl: string;
   /** ISO 8601 UTC of the slot (echoed back). */
@@ -120,16 +121,22 @@ type CalendlyError = {
 
 /**
  * Build a Calendly deep-link that lands the user on the booking page with
- * a specific day + time already selected. Pattern (confirmed from a live
- * Calendly URL):
+ * a specific day + time already selected AND optional invitee details
+ * pre-filled. Pattern (confirmed from live Calendly URLs):
  *
- *   {baseUrl}/-/{YYYY-MM-DDTHH:mm:ss±HH:MM}?month=YYYY-MM&date=YYYY-MM-DD
+ *   {baseUrl}/-/{YYYY-MM-DDTHH:mm:ss±HH:MM}?month=YYYY-MM&date=YYYY-MM-DD&name=…&email=…
  *
  * Where the ISO timestamp is in the INVITEE's local timezone (with proper
  * offset) so Calendly's UI shows the correct clock time. The `month` and
- * `date` query params pre-navigate the calendar widget to that day.
+ * `date` query params pre-navigate the calendar widget. `name` and `email`
+ * pre-fill the invitee form so the user only clicks "Confirm".
  */
-function buildSlotDeepLink(baseUrl: string, utcISO: string, tz: string): string {
+function buildSlotDeepLink(
+  baseUrl: string,
+  utcISO: string,
+  tz: string,
+  invitee?: { name?: string; email?: string },
+): string {
   const d = new Date(utcISO);
   if (Number.isNaN(d.getTime())) throw new Error(`Invalid startTime: ${utcISO}`);
 
@@ -160,7 +167,15 @@ function buildSlotDeepLink(baseUrl: string, utcISO: string, tz: string): string 
   const offset = rawOffset || "+00:00";
 
   const localISO = `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}${offset}`;
-  return `${baseUrl}/-/${localISO}?month=${yyyy}-${mm}&date=${yyyy}-${mm}-${dd}`;
+
+  const query = new URLSearchParams({
+    month: `${yyyy}-${mm}`,
+    date: `${yyyy}-${mm}-${dd}`,
+  });
+  if (invitee?.name) query.set("name", invitee.name);
+  if (invitee?.email) query.set("email", invitee.email);
+
+  return `${baseUrl}/-/${localISO}?${query.toString()}`;
 }
 
 /**
@@ -171,6 +186,8 @@ function buildSlotDeepLink(baseUrl: string, utcISO: string, tz: string): string 
 export async function bookSlot(params: {
   startTime: string; // ISO 8601 UTC — from checkAvailability, must be in the future
   timezone?: string; // IANA timezone to render the Calendly UI in (defaults to Guillermo's tz)
+  name?: string; // Invitee's full name — pre-filled in Calendly's form
+  email?: string; // Invitee's email — pre-filled in Calendly's form
 }): Promise<BookingLink> {
   const timezone = params.timezone ?? env.CALENDLY_DEFAULT_TZ;
 
@@ -195,7 +212,10 @@ export async function bookSlot(params: {
 
   const data = (await res.json()) as { resource: { booking_url: string } };
   const baseUrl = data.resource.booking_url;
-  const bookingUrl = buildSlotDeepLink(baseUrl, params.startTime, timezone);
+  const bookingUrl = buildSlotDeepLink(baseUrl, params.startTime, timezone, {
+    name: params.name,
+    email: params.email,
+  });
 
   return { bookingUrl, startTime: params.startTime };
 }

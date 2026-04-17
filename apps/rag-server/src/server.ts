@@ -79,12 +79,13 @@ When the user wants to book a 30-min meeting with Guillermo, or asks about his a
    - If the user asks without a window ("when can we chat?"), default to the next 5 business days from now.
    - Returns slots with raw UTC and a pre-formatted local-time string — quote the local-time string to the user (no timezone math on your end). If the user mentioned their own timezone, pass it as \`displayTimezone\`.
 
-2. **\`bookSlot({ startTime, timezone? })\`** — generates a one-click booking link with the day + time already pre-selected. **DO NOT ASK THE USER FOR NAME OR EMAIL** — they'll enter those once on the Calendly page. All you need is: (a) the slot the user picked (must come from a prior checkAvailability call), and (b) optionally their timezone if they mentioned one.
+2. **\`bookSlot({ startTime, name, email, timezone? })\`** — generates a one-click booking link with day, time, name, and email ALL pre-filled. The invitee only clicks "Confirm" on the Calendly page. **You MUST collect the user's name and email before calling this tool** — ask for them once, in the user's language, in a single short message (e.g. "Para generar el link necesito tu nombre y email — ¿cuáles son?" / "To generate the link I need your name and email — what are they?"). If the user declines to share them, share \`PUBLIC_SCHEDULING_URL\` (passed via the \`bookSlot\` error fallback path) instead of calling \`bookSlot\`.
 
 **Booking flow:**
 - User asks availability → call \`checkAvailability\`, then offer up to ~5 slots by local time.
-- User picks a slot ("the 2pm one works") → call \`bookSlot\` immediately with that \`startTime\`. Don't ask follow-up questions about name/email.
-- The tool returns a URL like \`calendly.com/d/xxxx/-/2026-04-30T14:00:00-04:00?month=…\`. Share it with a brief one-line message like: *"Here's your link — one click: [Book Mon Apr 20, 2:00 PM](URL). Name + email on the Calendly page and you're done."*
+- User picks a slot ("the 2pm one works") → if you don't already have name + email, ASK for them in one message. Don't ask for timezone unless the user brings it up.
+- Once you have name + email (and slot), call \`bookSlot\` with \`startTime\`, \`name\`, and \`email\`.
+- The tool returns a URL like \`calendly.com/d/xxxx/-/2026-04-30T14:00:00-04:00?month=…&name=…&email=…\`. Share it with a brief one-line message like: *"Here's your link — one click: [Book Mon Apr 20, 2:00 PM](URL). Your name and email are already filled in, just click Confirm."* (Spanish: *"Aquí tienes el link — un clic: [Reservar lunes 20 abr, 2:00 PM](URL). Tu nombre y email ya están prellenados, solo falta confirmar."*)
 
 **Handling the \`bookSlot\` outcome field:**
 - \`"ready"\`: Share \`bookingUrl\` with the \`startTimeLocal\` label as above. Keep it to 1–2 sentences.
@@ -92,7 +93,7 @@ When the user wants to book a 30-min meeting with Guillermo, or asks about his a
 
 **Guardrails:**
 - Never invent slots. Only propose times that \`checkAvailability\` returned.
-- Don't collect name/email in chat — that's an anti-pattern here (Calendly re-asks, annoys the user).
+- Always collect name + email in chat BEFORE calling \`bookSlot\` — that's what makes the link one-click.
 - Don't call \`bookSlot\` on speculative times the user only *mentioned* — wait for them to confirm the slot they want.
 
 ## GitHub activity (getGithubActivity tool)
@@ -265,12 +266,24 @@ app.post("/chat", async (c) => {
 
       bookSlot: tool({
         description:
-          "Generate a one-click booking link for a specific 30-min slot on Guillermo's calendar. The link lands the user on Calendly's page with the day + time already selected — they only fill name/email there, once. Call this AFTER checkAvailability returned the slot AND the user has clearly picked it. Do NOT ask the user for name or email — Calendly handles that on its own page.",
+          "Generate a one-click booking link for a specific 30-min slot on Guillermo's calendar with the invitee's name and email PRE-FILLED. The link lands the user on Calendly's page with day, time, name, and email already set — they only click Confirm. Call this AFTER checkAvailability returned the slot, the user has picked it, AND the user has provided their name and email. If name or email are missing, ASK the user first (in their language) — do NOT call this tool without them.",
         inputSchema: z.object({
           startTime: z
             .string()
             .describe(
               "ISO 8601 UTC timestamp of the slot — must exactly match one the checkAvailability tool returned.",
+            ),
+          name: z
+            .string()
+            .min(1)
+            .describe(
+              "Invitee's full name. Ask the user for it before calling this tool. Gets pre-filled into Calendly's booking form.",
+            ),
+          email: z
+            .string()
+            .email()
+            .describe(
+              "Invitee's email. Ask the user for it before calling this tool. Gets pre-filled into Calendly's booking form.",
             ),
           timezone: z
             .string()
@@ -279,10 +292,10 @@ app.post("/chat", async (c) => {
               "Invitee's IANA timezone (e.g. 'America/New_York'). Determines how the preselected time is rendered on the Calendly page. Defaults to 'America/Santiago'.",
             ),
         }),
-        execute: async ({ startTime, timezone }) => {
+        execute: async ({ startTime, timezone, name, email }) => {
           const tz = timezone ?? env.CALENDLY_DEFAULT_TZ;
           try {
-            const result = await bookSlot({ startTime, timezone });
+            const result = await bookSlot({ startTime, timezone, name, email });
             return {
               outcome: "ready",
               startTime: result.startTime,
