@@ -197,6 +197,11 @@ export default function EinkPortfolio() {
           <AboutSection c={c} t={t} />
         </section>
 
+        <Divider c={c} label={t.sectionWork} />
+        <section ref={refs.work} data-section="work">
+          <WorkSection c={c} t={t} lang={lang} />
+        </section>
+
         <Divider c={c} label={t.sectionProjects} />
         <section ref={refs.projects} data-section="projects">
           <ProjectsSection c={c} t={t} lang={lang} />
@@ -205,11 +210,6 @@ export default function EinkPortfolio() {
         <Divider c={c} label={t.sectionTalks} />
         <section ref={refs.talks} data-section="talks">
           <TalksSection c={c} t={t} lang={lang} />
-        </section>
-
-        <Divider c={c} label={t.sectionWork} />
-        <section ref={refs.work} data-section="work">
-          <WorkSection c={c} t={t} lang={lang} />
         </section>
 
         <Divider c={c} label={t.sectionBackground} />
