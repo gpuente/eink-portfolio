@@ -14,6 +14,7 @@ import { useMoonPhase } from "./eink/hooks/useMoonPhase";
 import { useScrollSpy } from "./eink/hooks/useScrollSpy";
 import type { SectionRefs } from "./eink/hooks/useScrollSpy";
 import { useDeviceReveal } from "./eink/hooks/useDeviceReveal";
+import { useIsCalendlyOpen } from "./eink/hooks/useIsCalendlyOpen";
 
 import GlobalStyles from "./eink/ui/GlobalStyles";
 import SurfaceLayers from "./eink/ui/SurfaceLayers";
@@ -119,9 +120,14 @@ export default function EinkPortfolio() {
   const scrollLock = useRef<boolean>(false);
   const [active, setActive] = useScrollSpy(refs, scrollLock);
   const rawRevealProgress = useDeviceReveal(REVEAL_HEIGHT);
-  // Don't run the reveal while the chat panel is open — the panel is z:65
-  // and would sit under the z:9000 device overlay, which looks broken.
-  const revealProgress = chatOpen ? 0 : rawRevealProgress;
+  const calendlyOpen = useIsCalendlyOpen();
+  // Pause the reveal while any blocking overlay is open:
+  //   - Chat panel (z:65) — would sit under the z:9000 device overlay.
+  //   - Calendly popup — locks background scroll via `position: fixed`
+  //     on <body>, which collapses `documentElement.scrollHeight` and
+  //     would otherwise fake a "you're at the bottom" signal → force
+  //     the device reveal over the Calendly modal on mobile.
+  const revealProgress = chatOpen || calendlyOpen ? 0 : rawRevealProgress;
 
   const c = PALETTES[mode];
   const t = COPY[lang];
