@@ -110,13 +110,17 @@ const PERSON_JSONLD = {
 
 						window.dataLayer = window.dataLayer || [];
 						window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+						const analyticsState = window.__einkAnalytics || (window.__einkAnalytics = {
+							pageLoadListenerAdded: false,
+							clickListenerAdded: false,
+						});
 						window.gtag("js", new Date());
 						window.gtag("config", gaMeasurementId, {
 							send_page_view: false,
 							anonymize_ip: true,
 						});
 
-						var trackPageView = function () {
+						const trackPageView = function () {
 							window.gtag("event", "page_view", {
 								page_title: document.title,
 								page_location: window.location.href,
@@ -124,29 +128,29 @@ const PERSON_JSONLD = {
 							});
 						};
 
-						if (!window.__einkGaPageLoadListener) {
+						if (!analyticsState.pageLoadListenerAdded) {
 							document.addEventListener("astro:page-load", trackPageView);
-							window.__einkGaPageLoadListener = true;
+							analyticsState.pageLoadListenerAdded = true;
 						}
 
-						if (!window.__einkGaClickListener) {
+						if (!analyticsState.clickListenerAdded) {
 							document.addEventListener("click", function (event) {
 								if (!(event.target instanceof Element)) return;
-								var anchor = event.target.closest("a[href]");
+								const anchor = event.target.closest("a[href]");
 								if (!anchor) return;
 
-								var href = anchor.getAttribute("href");
+								const href = anchor.getAttribute("href");
 								if (!href || href.startsWith("#")) return;
 
-								var url;
+								let url;
 								try {
 									url = new URL(href, window.location.href);
 								} catch (_) {
 									return;
 								}
 
-								var isOutbound = url.origin !== window.location.origin;
-								var isDownload = /\.(pdf|zip|docx?|xlsx?|pptx?|csv)$/i.test(url.pathname);
+								const isOutbound = url.origin !== window.location.origin;
+								const isDownload = /\.(pdf|zip|docx?|xlsx?|pptx?|csv)$/i.test(url.pathname);
 
 								if (isOutbound) {
 									window.gtag("event", "click", {
@@ -158,14 +162,14 @@ const PERSON_JSONLD = {
 								}
 
 								if (isDownload) {
-									var fileName = url.pathname.split("/").pop() || "unknown";
+									const fileName = url.pathname.split("/").pop() || "unknown";
 									window.gtag("event", "file_download", {
 										file_name: fileName,
 										link_url: url.href,
 									});
 								}
 							});
-							window.__einkGaClickListener = true;
+							analyticsState.clickListenerAdded = true;
 						}
 
 						trackPageView();
