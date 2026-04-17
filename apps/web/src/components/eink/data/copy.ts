@@ -46,6 +46,8 @@ export type Copy = {
 
   contactTitle: string;
   contactSub: string;
+  scheduleCta: string;
+  scheduleHint: string;
 
   end: string;
 
@@ -154,6 +156,8 @@ export const COPY: Record<Lang, Copy> = {
     contactTitle: "Get in touch.",
     contactSub:
       "For project inquiries, collaborations, or longer conversations, email is the best channel. I read carefully and reply thoughtfully.",
+    scheduleCta: "Schedule a 30-min call",
+    scheduleHint: "Check availability and book in Calendly",
 
     end: "— end of transmission —",
 
@@ -276,6 +280,8 @@ export const COPY: Record<Lang, Copy> = {
     contactTitle: "Escríbeme.",
     contactSub:
       "Para consultas de proyectos, colaboraciones o conversaciones más largas, el email es el canal principal. Leo con cuidado y respondo con calma.",
+    scheduleCta: "Agendar llamada de 30 min",
+    scheduleHint: "Revisa mi disponibilidad y agenda en Calendly",
 
     end: "— fin de la transmisión —",
 

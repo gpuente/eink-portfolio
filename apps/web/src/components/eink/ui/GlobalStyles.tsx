@@ -178,6 +178,30 @@ export default function GlobalStyles({ c }: Props) {
       }
       .chat-thinking { animation: chat-pulse 1.2s ease-in-out infinite; }
 
+      /* Schedule CTA nudge — 3s cycle so the button pulls the eye regularly
+         without being ignored. Shake phase is ~450ms of a 3000ms cycle
+         (85% still, 15% motion) — short enough that it reads as "tap for
+         attention" rather than a jittery loop. Hover and focus pause the
+         animation (the user has clearly found it). prefers-reduced-motion
+         disables it entirely for vestibular-sensitive viewers. The parent
+         component also removes the class after the first click. */
+      @keyframes schedule-nudge {
+        0%, 85%, 100% { transform: translateX(0); }
+        88%           { transform: translateX(-3px); }
+        92%           { transform: translateX(3px);  }
+        96%           { transform: translateX(-2px); }
+      }
+      .schedule-cta {
+        animation: schedule-nudge 3s ease-in-out 1.5s infinite;
+      }
+      .schedule-cta:hover,
+      .schedule-cta:focus-visible {
+        animation-play-state: paused;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .schedule-cta { animation: none; }
+      }
+
       /* Markdown rendering inside assistant bubbles. Keep the styling calm
          and close to the surrounding body text — no shouting headings, no
          bright blue links. Links inherit text colour and add an underline. */
