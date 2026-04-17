@@ -11,7 +11,9 @@
     "build": "turbo run build",
     "preview": "turbo run preview",
     "check": "turbo run check",
-    "web": "pnpm --filter @portfolio/web"
+    "ingest": "turbo run ingest",
+    "web": "pnpm --filter @portfolio/web",
+    "rag": "pnpm --filter @portfolio/rag-server"
   },
   "devDependencies": {
     "turbo": "^2.5.6"

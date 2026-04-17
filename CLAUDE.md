@@ -27,7 +27,7 @@ This is a **pnpm + Turborepo** monorepo for Guillermo Puente's portfolio.
 | Path | Name | Status | Purpose |
 |---|---|---|---|
 | `apps/web` | `@portfolio/web` | shipped | Astro static site with the e-ink portfolio + `/gallery` page |
-| `apps/rag-server` | `@portfolio/rag-server` | planned (see `docs/rag-server.md`) | Node service backing a RAG-based chat agent embedded in `apps/web` |
+| `apps/rag-server` | `@portfolio/rag-server` | scaffolded (chat UI in web pending) | Hono service with `/chat` (OpenAI gpt-4o-mini + tool calling) backed by Astra DB vector search. Ingestion script reads `apps/rag-server/sources/`. See [`docs/rag-server.md`](docs/rag-server.md) and [`apps/rag-server/CLAUDE.md`](apps/rag-server/CLAUDE.md) |
 
 ## Workspace + scripts
 
@@ -39,10 +39,13 @@ pnpm dev                               # turbo: run dev in every app
 pnpm build                             # turbo: build every app (caches outputs)
 pnpm preview                           # turbo: build then preview
 pnpm check                             # turbo: typecheck every app
-pnpm web <command>                     # forward to apps/web (e.g. `pnpm web add zod`)
+pnpm ingest                            # turbo: run ingest in every app that has it (rag-server only for now)
+
+pnpm web <command>                     # forward to apps/web   (e.g. `pnpm web add zod`)
+pnpm rag <command>                     # forward to apps/rag-server (e.g. `pnpm rag dev`, `pnpm rag ingest`)
 
 pnpm --filter @portfolio/web dev       # explicit single-app form
-pnpm --filter @portfolio/web build
+pnpm --filter @portfolio/rag-server dev
 ```
 
 Turbo's task graph is in `turbo.json`. `build` depends on upstream `^build` (so future shared packages get built before the apps that consume them). `dev` and `preview` are `persistent` (turbo keeps them running) and uncached.

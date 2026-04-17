@@ -1,10 +1,10 @@
-# RAG server — future app at `apps/rag-server`
+# RAG server — `apps/rag-server`
 
-Status: **planned, not yet scaffolded.** This file captures intent, planned architecture, and open questions so the next iteration starts with shared context.
+Status: **scaffolded.** Server, ingestion script, env contract, and monorepo wiring are in place. The chat UI inside `apps/web` is not yet built — that's the next task once the user fills in Astra + OpenAI creds and ingests sources.
 
 ## Goal
 
-Build a Node.js service that powers an in-page **chat agent** embedded in the portfolio (`apps/web`). The agent answers questions about Guillermo Puente — work history, projects, skills, talks, CV — using RAG (retrieval-augmented generation) over a vector database.
+A Node.js service that powers an in-page **chat agent** embedded in the portfolio (`apps/web`). The agent answers questions about Guillermo Puente — work history, projects, skills, talks, CV — using RAG (retrieval-augmented generation) over a vector database.
 
 Use case: a recruiter, collaborator, or curious visitor lands on the portfolio, opens the chat, and asks something like "What kind of AI work has Guillermo done?" or "Has he worked with Go in production?". The agent answers from grounded context (no hallucinated companies / titles), in a few seconds, in English or Spanish.
 
@@ -13,57 +13,58 @@ Use case: a recruiter, collaborator, or curious visitor lands on the portfolio, 
 ```
 ┌─────────────────────────┐        ┌──────────────────────────┐
 │  apps/web               │        │  apps/rag-server         │
-│  (Astro + React island) │ HTTP / │  (Node service)          │
+│  (Astro + React island) │ HTTP / │  (Hono on Node 22)       │
 │                         │  SSE   │                          │
 │   <Chat />  ──────────────────►  POST /chat                 │
-│                         │        │   ├─ retrieve top-K      │
-│                         │        │   ├─ build prompt        │
-│                         │        │   └─ stream LLM tokens   │
+│   (TBD: @ai-sdk/react   │        │   ├─ streamText          │
+│    useChat hook)        │        │   ├─ tool: searchProfile │
+│                         │        │   └─ stream UI messages  │
 └─────────────────────────┘        └─────┬──────────────────┬─┘
                                          │                  │
                                          ▼                  ▼
                                  ┌──────────────┐    ┌─────────────────┐
-                                 │  Vector DB   │    │  LLM provider   │
-                                 │  Astra DB    │    │  Anthropic /    │
-                                 │  (DataStax)  │    │  OpenAI         │
+                                 │  Astra DB    │    │  OpenAI         │
+                                 │  (collection │    │  gpt-4o-mini    │
+                                 │  vector 1536)│    │  + embed-3-small│
                                  └──────────────┘    └─────────────────┘
 ```
 
-## Tech direction (TBD — pin later)
+## Stack (committed)
 
-- **Runtime:** Node 22+ (matches monorepo `engines.node`)
-- **Server framework:** Hono (small, first-class SSE, TS-native) — alternative: Fastify
-- **LLM SDK:** Anthropic SDK (Claude). Use **prompt caching** for the system prompt + retrieved context to keep latency and cost down across follow-up turns
-- **Vector DB:** **Astra DB (DataStax)** — managed, serverless, includes a built-in embedding model so we don't have to host an embedder
-- **Schema:** one collection per content type (profile chunks, project chunks, work chunks, talk chunks) with metadata (`source`, `lang`, `last_updated`) for filtered retrieval
-- **Streaming:** SSE from server → web
+| Concern | Choice |
+|---|---|
+| Runtime | Node ≥ 22.12 |
+| Server | Hono + `@hono/node-server` |
+| AI orchestration | `ai` (Vercel AI SDK) + `@ai-sdk/openai` |
+| Chat model | `gpt-4o-mini` (tool calling, ~$0.15/$0.60 per 1M tokens) |
+| Embedding model | `text-embedding-3-small` (1536 dim, multilingual) |
+| Vector DB | Astra DB via `@datastax/astra-db-ts` (Collection mode, BYO vectors) |
+| Schema validation | `zod` |
+| PDF text | `pdf-parse` |
+| Dev runner | `tsx watch --env-file=.env` |
 
-## Embedding sources
+## Embedding sources (current behaviour)
 
-The server will ingest these from the monorepo root:
+The ingest script reads **only** files under `apps/rag-server/sources/` (recursively). Supported extensions: `.md`, `.markdown`, `.txt`, `.pdf`. The user controls what the agent knows by managing this folder.
 
-- `data/portfolio.json` — résumé / projects / experience / certifications (already curated, machine-readable)
-- `apps/web/src/components/eink/data/*` — bilingual rewritten content (the source of what the public site shows)
-- A new `docs/cv-en.md` and `docs/cv-es.md` (TBD) — long-form CV in both languages, written specifically for the agent's grounding (with anecdotes, metrics, and context that doesn't fit on the visual portfolio)
-- LinkedIn export, when available, into `docs/`
+The existing `data/portfolio.json` and `apps/web/src/components/eink/data/*` are *not* ingested automatically — they live for the website. If the user wants the agent to know that content, they can `cp` it (or a curated digest of it) into `sources/`.
 
-Ingestion is a one-shot script: `pnpm --filter @portfolio/rag-server ingest`. Re-runnable, idempotent, prints diff (chunks added / updated / removed).
+Long-form CV files written specifically for the agent (`docs/cv-en.md`, `docs/cv-es.md`) and a LinkedIn export are good candidates to drop into `sources/` once available.
 
-## Web integration
+## Web integration (planned, not yet built)
 
 - New chat UI in `apps/web` — likely a slide-up drawer (e-ink-friendly, doesn't disturb the calm scroll), or a dedicated `/chat` page
-- The web app reads the server URL from `PUBLIC_RAG_SERVER_URL` (Astro env)
-- Bilingual: respects the existing `lang` toggle (the agent answers in EN or ES according to the same state)
-- No auth: a stateless conversation (or session id stored in `sessionStorage`) is enough for a public Q&A
-- Loading state: an e-ink-styled "thinking" indicator (no spinning circles — maybe a slowly-fading cursor block)
+- Use `@ai-sdk/react` `useChat({ api: PUBLIC_RAG_SERVER_URL + '/chat' })`
+- Bilingual: respects the existing `lang` toggle (the system prompt already instructs the model to mirror the user's language, so no separate endpoint is needed)
+- No auth: stateless (or session id stored in `sessionStorage`)
+- Loading state: e-ink-styled "thinking" indicator (no spinning circles — maybe a slowly-fading cursor block)
 
-## Open questions
+## Open questions (still TBD)
 
-- **Hosting:** Fly.io (Docker, easy SSE) vs Railway (similar) vs a Cloudflare Worker (cold-start fast but Anthropic SDK + Astra SDK compatibility TBC)
-- **Conversation history:** keep last N turns in memory only (per session id), no persistence
+- **Hosting:** Fly.io (Docker, easy SSE) vs Railway (similar) vs a Cloudflare Worker (Hono runs there but `pdf-parse` is Node-only — would need to move ingestion to a separate process or replace with `unpdf`)
+- **Conversation history:** keep last N turns in memory only (per session id), no persistence — the client already manages history via the AI SDK's `UIMessage[]`, so the server stays stateless
 - **Rate limiting:** IP-based + a hard daily token budget to bound LLM cost. Consider Cloudflare Turnstile in front of the chat
-- **Spanish language:** does the embedding model handle ES well, or do we need separate ES chunks vs translating queries to EN before retrieval?
-- **Source citations:** the agent should cite where it learned each fact ("From his Evernote work…"). UI: small footnote-style references below each answer
+- **Source citations:** the agent should cite where it learned each fact ("From his Evernote work…"). The system prompt asks for this; the UI will surface it as small footnotes next to each answer
 
 ## Out of scope (for v1)
 
@@ -72,3 +73,4 @@ Ingestion is a one-shot script: `pnpm --filter @portfolio/rag-server ingest`. Re
 - Multi-modal (image upload, etc.)
 - Long-term memory across sessions
 - A dashboard for the user to inspect / curate retrievals
+- Incremental ingest (current script does full re-index — fast enough for the data volume here)
