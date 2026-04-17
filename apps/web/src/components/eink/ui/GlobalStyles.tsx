@@ -170,6 +170,64 @@ export default function GlobalStyles({ c }: Props) {
       }
       .chat-thinking { animation: chat-pulse 1.2s ease-in-out infinite; }
 
+      /* Markdown rendering inside assistant bubbles. Keep the styling calm
+         and close to the surrounding body text — no shouting headings, no
+         bright blue links. Links inherit text colour and add an underline. */
+      .chat-md > :first-child { margin-top: 0; }
+      .chat-md > :last-child  { margin-bottom: 0; }
+      .chat-md p { margin: 0 0 8px; }
+      .chat-md a {
+        color: inherit;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        text-decoration-thickness: 1px;
+      }
+      .chat-md a:hover { text-decoration-thickness: 2px; }
+      .chat-md strong { font-weight: 500; }
+      .chat-md em { font-style: italic; }
+      .chat-md ul, .chat-md ol { margin: 4px 0 8px; padding-left: 20px; }
+      .chat-md li { margin: 2px 0; }
+      .chat-md li > p { margin: 0; }
+      .chat-md h1, .chat-md h2, .chat-md h3, .chat-md h4 {
+        font-size: 1em;
+        font-weight: 500;
+        margin: 10px 0 4px;
+        letter-spacing: -.005em;
+      }
+      .chat-md code {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: .92em;
+        padding: 1px 5px;
+        background: rgba(0,0,0,.06);
+        border-radius: 4px;
+      }
+      .chat-md pre {
+        margin: 8px 0;
+        padding: 10px 12px;
+        background: rgba(0,0,0,.06);
+        border-radius: 6px;
+        overflow-x: auto;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .chat-md pre code {
+        background: none;
+        padding: 0;
+        font-size: inherit;
+      }
+      .chat-md blockquote {
+        margin: 6px 0;
+        padding-left: 10px;
+        border-left: 2px solid rgba(0,0,0,.2);
+        color: inherit;
+        opacity: .85;
+      }
+      .chat-md hr {
+        border: none;
+        border-top: 1px dashed rgba(0,0,0,.2);
+        margin: 10px 0;
+      }
+
       /* Chip hover (only on devices that support hover, so mobile taps stay flat) */
       @media (hover: hover) {
         .chat-chip:hover { background: ${c.paper} !important; }

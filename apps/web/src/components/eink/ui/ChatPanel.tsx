@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Send, X } from "lucide-react";
+import Markdown from "react-markdown";
 import type { Palette, Mode } from "../data/palettes";
 import type { Copy } from "../data/copy";
 
@@ -225,6 +226,7 @@ export default function ChatPanel({ c, mode, t, open, onClose }: Props) {
           return (
             <div
               key={m.id}
+              className={isUser ? undefined : "chat-md"}
               style={{
                 alignSelf: isUser ? "flex-end" : "flex-start",
                 maxWidth: "85%",
@@ -235,11 +237,26 @@ export default function ChatPanel({ c, mode, t, open, onClose }: Props) {
                 padding: "10px 14px",
                 fontSize: 14,
                 lineHeight: 1.55,
-                whiteSpace: "pre-wrap",
+                whiteSpace: isUser ? "pre-wrap" : "normal",
                 wordBreak: "break-word",
               }}
             >
-              {text}
+              {isUser ? (
+                text
+              ) : (
+                <Markdown
+                  components={{
+                    // Open every link in a new tab; noreferrer for safety.
+                    a: ({ href, children, ...rest }) => (
+                      <a href={href} target="_blank" rel="noreferrer" {...rest}>
+                        {children}
+                      </a>
+                    ),
+                  }}
+                >
+                  {text}
+                </Markdown>
+              )}
             </div>
           );
         })}
