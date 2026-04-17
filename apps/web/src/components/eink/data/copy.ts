@@ -80,6 +80,10 @@ export type Copy = {
     placeholder: string;
     sendLabel: string;
     closeLabel: string;
+    clearLabel: string;
+    helpLabel: string;
+    helpTitle: string;
+    helpItems: string[];
     emptyHint: string;
     starterChips: [string, string, string];
     thinking: string;
@@ -188,11 +192,20 @@ export const COPY: Record<Lang, Copy> = {
       placeholder: "Ask anything…",
       sendLabel: "Send message",
       closeLabel: "Close chat",
-      emptyHint: "Ask me anything about Guillermo's work, projects, or background.",
+      clearLabel: "Clear chat",
+      helpLabel: "What can I ask?",
+      helpTitle: "You can ask about:",
+      helpItems: [
+        "Background, experience, and projects",
+        "AI work — LLMs, RAG, and agents",
+        "Availability for a meeting, and booking a slot",
+        "Live GitHub activity and top repos",
+      ],
+      emptyHint: "Ask me anything about Guillermo's work, availability, or GitHub activity.",
       starterChips: [
         "What AI work has he done?",
-        "What is he building right now?",
-        "What's his current tech stack?",
+        "When is he free for a 30-min call?",
+        "What has he shipped on GitHub lately?",
       ],
       thinking: "Thinking…",
       error: "Something went wrong. Try again in a moment.",
@@ -299,11 +312,20 @@ export const COPY: Record<Lang, Copy> = {
       placeholder: "Preguntá lo que quieras…",
       sendLabel: "Enviar mensaje",
       closeLabel: "Cerrar chat",
-      emptyHint: "Preguntame sobre el trabajo, los proyectos o la trayectoria de Guillermo.",
+      clearLabel: "Limpiar chat",
+      helpLabel: "¿Qué puedo preguntar?",
+      helpTitle: "Podés preguntar por:",
+      helpItems: [
+        "Trayectoria, experiencia y proyectos",
+        "Trabajo en IA — LLMs, RAG y agents",
+        "Disponibilidad para una reunión, y agendar un slot",
+        "Actividad reciente en GitHub y repos top",
+      ],
+      emptyHint: "Preguntame sobre el trabajo, la disponibilidad o la actividad en GitHub de Guillermo.",
       starterChips: [
         "¿Qué trabajo en IA ha hecho?",
-        "¿Qué está construyendo ahora?",
-        "¿Cuál es su stack actual?",
+        "¿Cuándo tiene un hueco de 30 minutos?",
+        "¿Qué ha enviado en GitHub últimamente?",
       ],
       thinking: "Pensando…",
       error: "Algo salió mal. Probá de nuevo en un momento.",

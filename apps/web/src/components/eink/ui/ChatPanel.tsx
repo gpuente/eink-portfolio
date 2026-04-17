@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Send, X } from "lucide-react";
+import { HelpCircle, Send, Trash2, X } from "lucide-react";
 import Markdown from "react-markdown";
 import type { Palette, Mode } from "../data/palettes";
 import type { Copy } from "../data/copy";
@@ -40,6 +40,7 @@ function messageText(m: UIMessage): string {
 
 export default function ChatPanel({ c, mode, t, open, onClose }: Props) {
   const [input, setInput] = useState("");
+  const [helpOpen, setHelpOpen] = useState(false);
   const initialMessages = useMemo(loadStoredMessages, []);
 
   const transport = useMemo(
@@ -75,6 +76,38 @@ export default function ChatPanel({ c, mode, t, open, onClose }: Props) {
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
+
+  // Close the help popover when the user clicks anywhere outside of it.
+  const helpRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!helpOpen) return;
+    const onDocPointer = (e: MouseEvent | TouchEvent) => {
+      if (!helpRef.current?.contains(e.target as Node)) setHelpOpen(false);
+    };
+    document.addEventListener("mousedown", onDocPointer);
+    document.addEventListener("touchstart", onDocPointer);
+    return () => {
+      document.removeEventListener("mousedown", onDocPointer);
+      document.removeEventListener("touchstart", onDocPointer);
+    };
+  }, [helpOpen]);
+
+  // Also close the help popover when the whole chat panel is closed.
+  useEffect(() => {
+    if (!open) setHelpOpen(false);
+  }, [open]);
+
+  const clearChat = () => {
+    setMessages([]);
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // sessionStorage unavailable — fine.
+      }
+    }
+    inputRef.current?.focus();
+  };
 
   // Auto-grow textarea
   const onInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -148,26 +181,149 @@ export default function ChatPanel({ c, mode, t, open, onClose }: Props) {
             {t.panelSubtitle}
           </div>
         </div>
-        <button
-          onClick={onClose}
-          title={t.closeLabel}
-          aria-label={t.closeLabel}
-          style={{
-            background: "transparent",
-            border: `1px solid ${c.inkFaint}`,
-            color: c.inkSoft,
-            padding: "5px 7px",
-            borderRadius: 6,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minWidth: 32,
-            minHeight: 32,
-          }}
-        >
-          <X size={14} />
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          {/* Help — "?" icon with a click/hover popover describing what the
+              agent can do. The popover anchors to this button, so the wrapper
+              is position: relative. */}
+          <div ref={helpRef} style={{ position: "relative" }}>
+            <button
+              onClick={() => setHelpOpen((v) => !v)}
+              onMouseEnter={() => setHelpOpen(true)}
+              title={t.helpLabel}
+              aria-label={t.helpLabel}
+              aria-expanded={helpOpen}
+              style={{
+                background: helpOpen ? c.paperBright : "transparent",
+                border: `1px solid ${c.inkFaint}`,
+                color: c.inkSoft,
+                padding: "5px 7px",
+                borderRadius: 6,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: 32,
+                minHeight: 32,
+              }}
+            >
+              <HelpCircle size={14} />
+            </button>
+            {helpOpen && (
+              <div
+                role="dialog"
+                aria-label={t.helpLabel}
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 8px)",
+                  right: 0,
+                  width: 260,
+                  maxWidth: "calc(100vw - 32px)",
+                  background: c.paperBright,
+                  color: c.ink,
+                  border: `1px solid ${c.inkFaint}`,
+                  borderRadius: 10,
+                  padding: "12px 14px",
+                  boxShadow:
+                    mode === "light"
+                      ? "0 14px 34px -16px rgba(60,50,30,.55), 0 6px 14px -6px rgba(60,50,30,.32)"
+                      : "0 14px 34px -16px rgba(0,0,0,.7), 0 6px 14px -6px rgba(0,0,0,.5)",
+                  zIndex: 5,
+                }}
+              >
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: 9,
+                    letterSpacing: ".22em",
+                    color: c.inkSoft,
+                    textTransform: "uppercase",
+                    marginBottom: 8,
+                  }}
+                >
+                  {t.helpTitle}
+                </div>
+                <ul
+                  style={{
+                    margin: 0,
+                    padding: 0,
+                    listStyle: "none",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 6,
+                    fontSize: 13,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {t.helpItems.map((item) => (
+                    <li
+                      key={item}
+                      style={{ paddingLeft: 14, position: "relative" }}
+                    >
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          top: "0.55em",
+                          width: 4,
+                          height: 4,
+                          borderRadius: 999,
+                          background: c.inkSoft,
+                        }}
+                      />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {hasMessages && (
+            <button
+              onClick={clearChat}
+              disabled={isBusy}
+              title={t.clearLabel}
+              aria-label={t.clearLabel}
+              style={{
+                background: "transparent",
+                border: `1px solid ${c.inkFaint}`,
+                color: c.inkSoft,
+                padding: "5px 7px",
+                borderRadius: 6,
+                cursor: isBusy ? "default" : "pointer",
+                opacity: isBusy ? 0.5 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: 32,
+                minHeight: 32,
+              }}
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+
+          <button
+            onClick={onClose}
+            title={t.closeLabel}
+            aria-label={t.closeLabel}
+            style={{
+              background: "transparent",
+              border: `1px solid ${c.inkFaint}`,
+              color: c.inkSoft,
+              padding: "5px 7px",
+              borderRadius: 6,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: 32,
+              minHeight: 32,
+            }}
+          >
+            <X size={14} />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
