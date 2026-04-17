@@ -36,17 +36,18 @@ const {
 		    reloads. */}
 		<ClientRouter />
 		{/* Pre-paint: read the saved language and theme from localStorage
-		    and stash them on `window` so the React island's useState
-		    initializers (EinkPortfolio) pick them up on the first client
-		    render, not after a useEffect. Also sets `html[data-lang]` so
-		    the /cv page's CSS selectors match before first paint.
+		    and set `html[data-lang]` / `html[data-mode]` before the first
+		    paint so CSS selectors and React `useState` initializers read
+		    the correct values on first client render (no EN→ES /
+		    light→dark flash after useEffect).
 
-		    This doesn't fully eliminate the EN→ES flash on `/` (the SSR
-		    HTML already shipped in EN), but it avoids a second render
-		    pass and fixes the CV page's language flash completely. The
-		    optional boot overlay (PUBLIC_ENABLE_BOOT_OVERLAY) handles
-		    the remaining SSR-paint window on the home page. */}
-		<script is:inline>
+		    `data-astro-rerun` forces this to re-execute on every SPA
+		    swap, not just full loads. Astro's view transitions reset
+		    `<html>` attributes to what the target page's source declares,
+		    so after a /cv → / back-nav `data-mode` / `data-lang` would
+		    come back cleared — re-running the script restores them from
+		    the authoritative source (localStorage) before React remounts. */}
+		<script is:inline data-astro-rerun>
 			(function () {
 				try {
 					var lang = localStorage.getItem("eink-lang");

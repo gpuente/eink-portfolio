@@ -193,7 +193,7 @@ export const CV_COPY: Record<CvLang, CvCopy> = {
         "self-directed study in AI / LLM engineering — tool-calling agents, RAG, Vercel AI SDK, production guardrails. Prior: Electron (FullStack), Go (Udemy), React Native (Udemy).",
     },
 
-    backLabel: "← Portfolio",
+    backLabel: "Portfolio",
     downloadLabel: "Download PDF",
     pdfHref: "/guillermo-puente-cv-en.pdf",
     pdfDownload: "Guillermo Puente - CV EN.pdf",
@@ -329,7 +329,7 @@ export const CV_COPY: Record<CvLang, CvCopy> = {
         "estudio autodirigido en AI / LLM engineering — tool-calling agents, RAG, Vercel AI SDK, guardrails de producción. Antes: Electron (FullStack), Go (Udemy), React Native (Udemy).",
     },
 
-    backLabel: "← Portfolio",
+    backLabel: "Portfolio",
     downloadLabel: "Descargar PDF",
     pdfHref: "/guillermo-puente-cv-es.pdf",
     pdfDownload: "Guillermo Puente - CV ES.pdf",

@@ -60,19 +60,24 @@ declare global {
 
 /**
  * Read order:
- *   1. `<html data-mode|data-lang>` — authoritative after SPA nav
- *      (CvThemeToggle / CvLangToggle update the attribute directly).
- *   2. `window.__einkX` — set by Layout's pre-paint script on the
- *      initial full page load.
- *   3. `localStorage` — last-resort fallback.
- *   4. Hard-coded default.
+ *   1. `<html data-mode|data-lang>` — authoritative after SPA nav. The
+ *      Layout's pre-paint script (with `data-astro-rerun`) refreshes
+ *      these attributes on every SPA swap from localStorage, so the
+ *      first branch is reliable in both full-load and back-nav flows.
+ *   2. `localStorage` — fallback if something stripped the attribute
+ *      before we read.
+ *   3. Hard-coded default.
+ *
+ * Note: we deliberately skip `window.__einkX` here. It's a snapshot
+ * from the INITIAL full page load, so after the user toggles
+ * lang/theme on the CV page and navigates back, the window var is
+ * stale and would overwrite the correct localStorage value on mount.
  */
 function readInitialMode(): Mode {
   if (typeof document === "undefined") return "light";
   const attr = document.documentElement.getAttribute("data-mode");
   if (attr === "dark") return "dark";
   if (attr === "light") return "light";
-  if (typeof window !== "undefined" && window.__einkMode) return window.__einkMode;
   try {
     const saved = window.localStorage.getItem(MODE_STORAGE_KEY);
     if (saved === "dark" || saved === "light") return saved;
@@ -87,7 +92,6 @@ function readInitialLang(): Lang {
   const attr = document.documentElement.getAttribute("data-lang");
   if (attr === "es") return "es";
   if (attr === "en") return "en";
-  if (typeof window !== "undefined" && window.__einkLang) return window.__einkLang;
   try {
     const saved = window.localStorage.getItem(LANG_STORAGE_KEY);
     if (saved === "en" || saved === "es") return saved;

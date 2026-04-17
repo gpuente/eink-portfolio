@@ -27,6 +27,8 @@
  *    Newsreader + JetBrains Mono, grain + vignette overlays) but with
  *    warmer paper and higher-contrast ink to reduce visual fatigue.
  */
+import { ArrowLeft, Download } from "lucide-react";
+
 import Layout from "../../layouts/Layout.astro";
 import { CV_COPY, type CvLang } from "./copy";
 import CvLangToggle from "./CvLangToggle";
@@ -51,55 +53,66 @@ const LANGS: CvLang[] = ["en", "es"];
        The toggle button holds both EN and ES labels in parallel spans;
        CSS shows only the currently active one (current language shown,
        matching the main-portfolio StatusBar convention). -->
-  <div class="top-bar">
-    <a href="/" class="back">
-      <span data-cv-lang="en">{CV_COPY.en.backLabel}</span>
-      <span data-cv-lang="es">{CV_COPY.es.backLabel}</span>
-    </a>
-    <div class="top-bar-right">
-      {/* Reuses the portfolio's StatusBar ToggleButton + ThemeSwitch
-          for pixel-parity. Both rendered client-only because their
-          visuals depend on localStorage, which is a client concern. */}
-      <CvLangToggle client:only="react" />
-      <CvThemeToggle client:only="react" />
-      {/* Direct PDF download. One <a> per language in the DOM; the
-          data-cv-lang CSS rule shows only the active one, so clicking
-          always grabs the right file. The `download` attribute forces
-          the browser to save (rather than open inline) and sets a
-          human-readable filename. */}
-      {
-        LANGS.map((l) => {
-          const cc = CV_COPY[l];
-          return (
-            <a
-              class="download-btn"
-              data-cv-lang={l}
-              href={cc.pdfHref}
-              download={cc.pdfDownload}
-              aria-label={cc.downloadLabel}
-            >
-              {/* Inline lucide Download icon, 12px */}
-              <svg
-                class="download-btn-icon"
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
+  {/* Top-bar critical layout ships as inline styles on the elements so it
+      survives the brief window during Astro's ClientRouter SPA swap when
+      the new /cv stylesheet hasn't fully activated yet. Without this the
+      right cluster jumps around (different each SPA nav) while the CSS
+      catches up. Colours / borders fall back via `var(--paper, #ebe7de)`
+      so they render even before the stylesheet loads. */}
+  <div
+    class="top-bar"
+    style="position: sticky; top: 0; z-index: 50; background: var(--paper, #ebe7de); border-bottom: 1px dashed var(--ink-faint, #9c9890);"
+  >
+    <div
+      class="top-bar-inner"
+      style="box-sizing: content-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1200px; margin: 0 auto; padding: 12px 24px; min-height: 44px;"
+    >
+      <a href="/" class="back" aria-label="Back to portfolio">
+        {/* lucide ArrowLeft — a real icon reads as a clickable affordance
+            where the plain `←` character blended into the mono label.
+            Rendered server-side by Astro (no `client:*` directive)
+            because it's purely presentational and doesn't need JS. */}
+        <ArrowLeft size={14} strokeWidth={2} className="back-icon" aria-hidden="true" />
+        <span data-cv-lang="en">{CV_COPY.en.backLabel}</span>
+        <span data-cv-lang="es">{CV_COPY.es.backLabel}</span>
+      </a>
+      {/* Right cluster order matches the main StatusBar: action → lang →
+          theme (theme rightmost). Placeholders for the client-only
+          toggles reserve their layout space so the right cluster doesn't
+          reshuffle as React hydrates — once mounted, each astro-island
+          fills the slot with the actual toggle. */}
+      <div
+        class="top-bar-right"
+        style="display: flex; align-items: center; gap: 10px;"
+      >
+        {/* Direct PDF download. One <a> per language in the DOM; the
+            data-cv-lang CSS rule shows only the active one, so clicking
+            always grabs the right file. */}
+        {
+          LANGS.map((l) => {
+            const cc = CV_COPY[l];
+            return (
+              <a
+                class="download-btn"
+                data-cv-lang={l}
+                href={cc.pdfHref}
+                download={cc.pdfDownload}
+                aria-label={cc.downloadLabel}
               >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              <span>{cc.downloadLabel}</span>
-            </a>
-          );
-        })
-      }
+                <Download size={12} strokeWidth={2} className="download-btn-icon" aria-hidden="true" />
+                <span>{cc.downloadLabel}</span>
+              </a>
+            );
+          })
+        }
+        {/* Reuses the portfolio's StatusBar ToggleButton + ThemeSwitch.
+            Rendered client-only because their visuals depend on
+            localStorage. `cv-island` class + inline min-width/height
+            reserve the layout space so the right cluster doesn't jump
+            while React hydrates on SPA nav from `/`. */}
+        <CvLangToggle client:only="react" />
+        <CvThemeToggle client:only="react" />
+      </div>
     </div>
   </div>
 
@@ -317,35 +330,79 @@ const LANGS: CvLang[] = ["en", "es"];
   }
 
   /* ─────────────────────────────────────────────────────────────────
-     Screen-only top bar (back + language toggle + print).
+     Screen-only top bar — back + download + lang + theme.
+     Outer `.top-bar` keeps the full-bleed sticky background + border;
+     `.top-bar-inner` mirrors the main portfolio's StatusBar layout
+     (`max-width: 1200px; margin: 0 auto; padding: 12px 24px;`) so the
+     right cluster on wide viewports sits at the same visual column
+     as the StatusBar's toggles.
   ───────────────────────────────────────────────────────────────── */
   .top-bar {
     position: sticky;
     top: 0;
     z-index: 50;
+    background: var(--paper);
+    border-bottom: 1px dashed var(--ink-faint);
+  }
+  .top-bar-inner {
+    /* `box-sizing: content-box` matches the main portfolio's StatusBar
+       math (which uses the default content-box). With the CV's global
+       `* { box-sizing: border-box }`, the same max-width + padding
+       values would produce a 48px-narrower inner and 24px shorter
+       height — making the right cluster land 24px left of the main's
+       right cluster. content-box here forces parity. */
+    box-sizing: content-box;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 14px 32px;
-    background: var(--paper);
-    border-bottom: 1px dashed var(--ink-faint);
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    min-height: 44px;
+    color: var(--ink-soft);
     font-family: "JetBrains Mono", ui-monospace, monospace;
     font-size: 11px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
   }
   .top-bar .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
     color: var(--ink-soft);
     text-decoration: none;
+    transition: color 160ms ease, transform 200ms ease;
   }
   .top-bar .back:hover {
     color: var(--ink);
+  }
+  /* Slide the arrow a touch left on hover — reinforces the "back"
+     affordance without drifting into a heavy micro-interaction. */
+  .top-bar .back:hover .back-icon {
+    transform: translateX(-2px);
+  }
+  .top-bar .back-icon {
+    display: inline-flex;
+    transition: transform 200ms ease;
   }
   .top-bar-right {
     display: flex;
     align-items: center;
     gap: 10px;
+  }
+  /* Reserve layout slots for the client-only toggles. Each React
+     island ships as `<astro-island>`; until React mounts the island
+     is empty and would take no space, reshuffling the right cluster
+     mid-hydration (visible after SPA nav from `/` where hydration
+     runs async). The explicit min dimensions match the actual toggle
+     sizes: ToggleButton is `minWidth: 40` padding-box, and
+     ThemeSwitch is exactly 40×22. */
+  .top-bar-right > astro-island {
+    display: inline-flex;
+    align-items: center;
+    min-width: 40px;
+    min-height: 24px;
   }
   .top-bar .download-btn {
     display: inline-flex;
