@@ -1,0 +1,753 @@
+---
+/**
+ * CV page rendered at `/cv`.
+ *
+ * Both EN and ES content are rendered in the static HTML; a small inline
+ * script applies the saved language from localStorage ("eink-lang", shared
+ * with the main portfolio) before the first paint, flipping
+ * `<html data-lang="…">`. CSS shows the matching `[data-cv-lang="…"]`
+ * block and hides the other — no flash, no JS framework.
+ *
+ * Toggling on the CV also writes back to localStorage, so if the user
+ * switches to Spanish here and then navigates to `/`, the main portfolio
+ * also mounts in Spanish.
+ *
+ * Content lives in ./copy.ts (CV_COPY with en + es keys).
+ *
+ * Design goals
+ * ─────────────
+ * 1. ATS-safe: single column, standard section headings, real text,
+ *    consistent date format. Both languages in the DOM — ATS parsers
+ *    already handle multilingual documents and pick up both text layers.
+ * 2. Print-optimised: `@page` A4 with 1.4cm margins; `@media print`
+ *    strips the e-ink overlays and forces ink-on-paper colours. The
+ *    hidden-language block stays hidden in print, so the PDF only
+ *    contains the active language.
+ * 3. Matches the portfolio aesthetic on screen (paper/ink palette,
+ *    Newsreader + JetBrains Mono, grain + vignette overlays) but with
+ *    warmer paper and higher-contrast ink to reduce visual fatigue.
+ */
+import Layout from "../../layouts/Layout.astro";
+import { CV_COPY, type CvLang } from "./copy";
+import CvLangToggle from "./CvLangToggle";
+
+const LANGS: CvLang[] = ["en", "es"];
+---
+
+<Layout
+  title="Guillermo Puente · CV"
+  description="Curriculum vitae — Senior Software Engineer with 10+ years across web, mobile, desktop, and AI integration."
+>
+  <!-- Apply the persisted language BEFORE any content paints so the
+       right block is shown on the first frame. Runs synchronously at
+       the top of <body> so CSS selectors keyed on `html[data-lang]`
+       match before the browser lays out anything. -->
+  <script is:inline>
+    (function () {
+      try {
+        var saved = localStorage.getItem("eink-lang");
+        var lang = saved === "es" || saved === "en" ? saved : "en";
+        document.documentElement.setAttribute("data-lang", lang);
+      } catch (_) {
+        document.documentElement.setAttribute("data-lang", "en");
+      }
+    })();
+  </script>
+
+  <!-- Screen-only e-ink surface layers. Print CSS hides them. -->
+  <div class="grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- Screen-only top bar: back + EN/ES toggle + print. Hidden in print.
+       The toggle button holds both EN and ES labels in parallel spans;
+       CSS shows only the currently active one (current language shown,
+       matching the main-portfolio StatusBar convention). -->
+  <div class="top-bar">
+    <a href="/" class="back">
+      <span data-cv-lang="en">{CV_COPY.en.backLabel}</span>
+      <span data-cv-lang="es">{CV_COPY.es.backLabel}</span>
+    </a>
+    <div class="top-bar-right">
+      {/* Reuses the portfolio's StatusBar ToggleButton for pixel-parity.
+          Rendered client-only because its label depends on localStorage,
+          which is a client concern. */}
+      <CvLangToggle client:only="react" />
+      {/* Direct PDF download. One <a> per language in the DOM; the
+          data-cv-lang CSS rule shows only the active one, so clicking
+          always grabs the right file. The `download` attribute forces
+          the browser to save (rather than open inline) and sets a
+          human-readable filename. */}
+      {
+        LANGS.map((l) => {
+          const cc = CV_COPY[l];
+          return (
+            <a
+              class="download-btn"
+              data-cv-lang={l}
+              href={cc.pdfHref}
+              download={cc.pdfDownload}
+              aria-label={cc.downloadLabel}
+            >
+              {/* Inline lucide Download icon, 12px */}
+              <svg
+                class="download-btn-icon"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              <span>{cc.downloadLabel}</span>
+            </a>
+          );
+        })
+      }
+    </div>
+  </div>
+
+  <main class="cv" role="main">
+    {
+      LANGS.map((lang) => {
+        const c = CV_COPY[lang];
+        return (
+          <div data-cv-lang={lang} lang={lang}>
+            {/* HEADER ─────────────────────────────────────────────── */}
+            <section class="header" aria-label="Personal details">
+              <h1>Guillermo Puente Sandoval</h1>
+              <p class="headline">{c.headline}</p>
+              <ul class="contact">
+                <li>
+                  <a href="mailto:guillermo.ps09@gmail.com">guillermo.ps09@gmail.com</a>
+                </li>
+                <li>
+                  <a href="https://gpuente.me" target="_blank" rel="noreferrer">gpuente.me</a>
+                </li>
+                <li>
+                  <a
+                    href="https://www.linkedin.com/in/guillermo-puente-66125b54/"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    linkedin.com/in/guillermo-puente
+                  </a>
+                </li>
+                <li>
+                  <a href="https://github.com/gpuente" target="_blank" rel="noreferrer">
+                    github.com/gpuente
+                  </a>
+                </li>
+                <li>{c.contactLocation}</li>
+                <li>{c.contactLangs}</li>
+              </ul>
+            </section>
+
+            {/* SUMMARY — single dense paragraph */}
+            <section class="block summary" aria-labelledby={`h-summary-${lang}`}>
+              <h2 id={`h-summary-${lang}`}>{c.h_summary}</h2>
+              <p>{c.summary}</p>
+            </section>
+
+            {/* SKILLS ─────────────────────────────────────────────── */}
+            <section class="block" aria-labelledby={`h-skills-${lang}`}>
+              <h2 id={`h-skills-${lang}`}>{c.h_skills}</h2>
+              <dl class="skills">
+                {c.skills.map((s) => (
+                  <>
+                    <dt>{s.label}</dt>
+                    <dd>{s.value}</dd>
+                  </>
+                ))}
+              </dl>
+            </section>
+
+            {/* EXPERIENCE ─────────────────────────────────────────── */}
+            <section class="block allow-break" aria-labelledby={`h-exp-${lang}`}>
+              <h2 id={`h-exp-${lang}`}>{c.h_exp}</h2>
+              {c.experience.map((e) => (
+                <article class="entry">
+                  <div class="entry-head">
+                    <h3>
+                      {e.org} <span class="sep">—</span> {e.role}
+                    </h3>
+                    <p class="meta">
+                      <span>{e.when}</span>
+                      <span class="dot">·</span>
+                      <span>{e.place}</span>
+                    </p>
+                  </div>
+                  <ul>
+                    {e.bullets.map((b) => <li>{b}</li>)}
+                  </ul>
+                </article>
+              ))}
+
+              <p class="prior-note">
+                <strong>{c.priorBgLabel}</strong>
+                <span class="sep-mid">·</span>
+                {c.priorBgBody}
+              </p>
+            </section>
+
+            {/* EDUCATION ──────────────────────────────────────────── */}
+            <section class="block" aria-labelledby={`h-edu-${lang}`}>
+              <h2 id={`h-edu-${lang}`}>{c.h_edu}</h2>
+              <article class="entry">
+                <div class="entry-head">
+                  <h3>
+                    {c.education.school} <span class="sep">—</span> {c.education.subtitle}
+                  </h3>
+                  <p class="meta"><span>{c.education.timespan}</span></p>
+                </div>
+                <p class="degree">{c.education.degree}</p>
+                <p class="note" style="margin-top: 3px;" set:html={c.education.continuing} />
+              </article>
+            </section>
+          </div>
+        );
+      })
+    }
+  </main>
+</Layout>
+
+<script>
+  // Sync <html lang> with the data-lang the early inline script applied,
+  // so screen readers read the correct language on first load. The React
+  // `CvLangToggle` island keeps them in sync after hydration.
+  const current =
+    (document.documentElement.getAttribute("data-lang") as "en" | "es" | null) ??
+    "en";
+  document.documentElement.setAttribute("lang", current);
+</script>
+
+<style is:global>
+  /* ─────────────────────────────────────────────────────────────────
+     Google Fonts + base typography.
+  ───────────────────────────────────────────────────────────────── */
+  @import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400..600;1,400..600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+  /* Design tokens — contrast bumped from the portfolio's #2b2a27 to
+     #1a1a1a to reduce visual fatigue on the beige paper. --ink-soft
+     lightened slightly to preserve the hierarchy between primary and
+     secondary text. Paper warmed from #e8e4db to #ebe7de. */
+  :root {
+    --paper: #ebe7de;
+    --paper-bright: #f3efe6;
+    --ink: #1a1a1a;
+    --ink-soft: #595651;
+    --ink-faint: #9c9890;
+  }
+
+  * { box-sizing: border-box; }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Newsreader", "Iowan Old Style", Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────
+     Language toggle — both EN and ES content blocks ship in the DOM.
+     An inline script in <body> reads localStorage ("eink-lang") and
+     sets `html[data-lang="…"]` before the first paint. These rules hide
+     the inactive language. The `:not(...)` selector also handles the
+     no-attribute case (defaults to EN).
+  ───────────────────────────────────────────────────────────────── */
+  html[data-lang="es"] [data-cv-lang="en"] { display: none !important; }
+  html:not([data-lang="es"]) [data-cv-lang="es"] { display: none !important; }
+
+  /* Grain + vignette — lighter than the portfolio to reduce visual noise
+     on a text-heavy document. */
+  .grain,
+  .vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+  .grain {
+    z-index: 100;
+    background-image:
+      radial-gradient(rgba(0, 0, 0, 0.025) 1px, transparent 1px),
+      radial-gradient(rgba(0, 0, 0, 0.018) 1px, transparent 1px);
+    background-size:
+      3px 3px,
+      7px 7px;
+    mix-blend-mode: multiply;
+    opacity: 0.7;
+  }
+  .vignette {
+    z-index: 99;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 55%,
+      rgba(80, 65, 40, 0.06) 90%,
+      rgba(80, 65, 40, 0.1) 100%
+    );
+  }
+
+  /* ─────────────────────────────────────────────────────────────────
+     Screen-only top bar (back + language toggle + print).
+  ───────────────────────────────────────────────────────────────── */
+  .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 32px;
+    background: var(--paper);
+    border-bottom: 1px dashed var(--ink-faint);
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .top-bar .back {
+    color: var(--ink-soft);
+    text-decoration: none;
+  }
+  .top-bar .back:hover {
+    color: var(--ink);
+  }
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .top-bar .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 200ms ease;
+  }
+  .top-bar .download-btn:hover {
+    opacity: 0.85;
+  }
+  .top-bar .download-btn-icon {
+    display: inline-flex;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────
+     CV container
+  ───────────────────────────────────────────────────────────────── */
+  .cv {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 44px 36px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .cv h1 {
+    margin: 0 0 4px;
+    font-weight: 500;
+    font-size: clamp(30px, 4.5vw, 40px);
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+  }
+  .cv .headline {
+    margin: 0 0 14px;
+    font-style: italic;
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+  .cv .contact {
+    list-style: none;
+    margin: 0 0 4px;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 12px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+  .cv .contact li:not(:last-child)::after {
+    content: "·";
+    margin-left: 12px;
+    color: var(--ink-faint);
+  }
+  .cv .contact a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .cv .contact a:hover {
+    color: var(--ink);
+    border-bottom-color: var(--ink-faint);
+  }
+
+  /* Blocks + headings */
+  .cv .block {
+    margin-top: 22px;
+  }
+  .cv h2 {
+    margin: 0 0 10px;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--ink-faint);
+    padding-bottom: 6px;
+  }
+  .cv h3 {
+    margin: 0;
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: -0.005em;
+    line-height: 1.3;
+  }
+  .cv h3 .sep {
+    color: var(--ink-faint);
+    font-weight: 400;
+    margin: 0 4px;
+  }
+  .cv p {
+    margin: 0 0 6px;
+    line-height: 1.5;
+    font-size: 13.5px;
+  }
+
+  /* Summary — tighter paragraph spacing */
+  .cv .summary p {
+    margin-bottom: 5px;
+  }
+  .cv .summary p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Entry (experience, education) */
+  .cv .entry {
+    margin-bottom: 14px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .cv .entry:last-child {
+    margin-bottom: 0;
+  }
+  .cv .entry-head {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin-bottom: 6px;
+  }
+  .cv .entry-head .meta {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    letter-spacing: 0.06em;
+    margin: 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .cv .entry-head .meta .dot {
+    color: var(--ink-faint);
+  }
+  .cv .entry ul {
+    margin: 5px 0 0 17px;
+    padding: 0;
+  }
+  .cv .entry li {
+    margin-bottom: 3px;
+    line-height: 1.5;
+    font-size: 13px;
+  }
+  .cv .entry li:last-child {
+    margin-bottom: 0;
+  }
+  .cv .entry .degree {
+    font-size: 13.5px;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .cv .entry .note {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-bottom: 0;
+  }
+
+  /* Skills — compact 2-col definition list */
+  .cv .skills {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    row-gap: 5px;
+    column-gap: 16px;
+    font-size: 13px;
+  }
+  .cv .skills dt {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding-top: 2px;
+  }
+  .cv .skills dd {
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  /* Prior background note — a single compact line after the last
+     experience entry, visually distinct from full entries so it reads as
+     "context, not a role". Dashed top border + italic text + softer
+     ink colour signal "background info". */
+  .cv .prior-note {
+    margin: 14px 0 0;
+    padding-top: 10px;
+    border-top: 1px dashed var(--ink-faint);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+  .cv .prior-note strong {
+    color: var(--ink);
+    font-style: normal;
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .cv .prior-note .sep-mid {
+    color: var(--ink-faint);
+    margin: 0 6px;
+    font-style: normal;
+  }
+
+  /* Anti-orphan — avoid splitting a heading from its first entry. */
+  .cv h2,
+  .cv h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────
+     PRINT — target 2 pages at A4.
+     Hidden-language blocks stay hidden in print too (the display:none
+     rule above has !important), so the PDF only carries the active
+     language.
+  ───────────────────────────────────────────────────────────────── */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  @media print {
+    *,
+    *::before,
+    *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+
+    html {
+      background: transparent !important;
+    }
+
+    body {
+      background-color: var(--paper) !important;
+      background-image:
+        radial-gradient(rgba(0, 0, 0, 0.022) 1px, transparent 1px),
+        radial-gradient(rgba(0, 0, 0, 0.016) 1px, transparent 1px) !important;
+      background-size:
+        3px 3px,
+        7px 7px !important;
+      background-position:
+        0 0,
+        1px 2px !important;
+      color: var(--ink) !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .grain,
+    .vignette,
+    .top-bar {
+      display: none !important;
+    }
+
+    .cv {
+      max-width: 100%;
+      margin: 0;
+      padding: 10mm 14mm;
+      font-size: 10pt;
+      background: transparent;
+    }
+
+    /* Padding-top on blocks survives page breaks — gives a top offset on
+       page 2. Negative margin compensates same-page gap so visual rhythm
+       stays tight. */
+    .cv .block {
+      padding-top: 5mm;
+      margin-top: -5mm;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .cv .block:first-of-type {
+      padding-top: 0;
+      margin-top: 0;
+    }
+    .cv .block.allow-break {
+      break-inside: auto;
+      page-break-inside: auto;
+    }
+    .cv .entry {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .cv .block.allow-break .entry {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    /* Only experience entries need the cross-page top offset — education
+       entries are short enough that padding-top would waste space. */
+    .cv .block[aria-labelledby^="h-exp-"] .entry {
+      padding-top: 8mm;
+      margin-top: -8mm;
+    }
+    .cv .block[aria-labelledby^="h-exp-"] .entry:first-of-type {
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .cv h1 {
+      font-size: 22pt;
+      margin-bottom: 1pt;
+      color: var(--ink);
+    }
+    .cv .headline {
+      font-size: 11.5pt;
+      margin-bottom: 6pt;
+      color: var(--ink-soft);
+    }
+    .cv .contact {
+      font-size: 9.5pt;
+      gap: 3pt 9pt;
+      margin-bottom: 0;
+      color: var(--ink-soft);
+    }
+    .cv .contact li:not(:last-child)::after {
+      margin-left: 9pt;
+      color: var(--ink-faint);
+    }
+
+    .cv .block {
+      margin-top: 10pt;
+    }
+    .cv h2 {
+      font-size: 9.5pt;
+      letter-spacing: 0.22em;
+      padding-bottom: 2.5pt;
+      margin-bottom: 5pt;
+      border-bottom: 0.6pt solid var(--ink-faint);
+      color: var(--ink-soft);
+    }
+    .cv h3 {
+      font-size: 11.5pt;
+      color: var(--ink);
+    }
+    .cv p {
+      font-size: 10.5pt;
+      margin-bottom: 3pt;
+      line-height: 1.4;
+    }
+
+    .cv .entry {
+      margin-bottom: 7pt;
+    }
+    .cv .entry-head {
+      margin-bottom: 3pt;
+      gap: 1.5pt;
+    }
+    .cv .entry-head .meta {
+      font-size: 9.5pt;
+      color: var(--ink-soft);
+    }
+    .cv .entry ul {
+      margin-top: 3pt;
+      margin-left: 14pt;
+    }
+    .cv .entry li {
+      font-size: 10.5pt;
+      line-height: 1.4;
+      margin-bottom: 1.5pt;
+    }
+    .cv .entry .note {
+      font-size: 10pt;
+      color: var(--ink-soft);
+    }
+
+    .cv .skills {
+      grid-template-columns: 95pt 1fr;
+      row-gap: 3pt;
+      font-size: 10.5pt;
+    }
+    .cv .skills dt {
+      font-size: 9pt;
+      padding-top: 0.5pt;
+      color: var(--ink-soft);
+    }
+    .cv .skills dd {
+      line-height: 1.4;
+    }
+
+    /* Prior background note — print */
+    .cv .prior-note {
+      margin-top: 8pt;
+      padding-top: 5pt;
+      border-top: 0.5pt dashed var(--ink-faint);
+      font-size: 9.5pt;
+      line-height: 1.4;
+      color: var(--ink-soft);
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .cv .prior-note strong {
+      font-size: 8.5pt;
+      letter-spacing: 0.16em;
+      color: var(--ink);
+    }
+
+    /* Subtle link styling — ink underline, not bright blue. */
+    .cv a {
+      color: var(--ink) !important;
+      text-decoration: none !important;
+      border-bottom: 0.4pt solid var(--ink-faint) !important;
+    }
+  }
+</style>

@@ -1,4 +1,4 @@
-import { ArrowUpRight, CircleDot } from "lucide-react";
+import { ArrowUpRight, CircleDot, Download, FileText } from "lucide-react";
 import timeAgo from "../util/timeAgo";
 import type { Palette } from "../data/palettes";
 import type { Copy, Lang } from "../data/copy";
@@ -13,7 +13,16 @@ type Props = {
   lang: Lang;
 };
 
-export default function HomeSection({ c, t, onJump, gh }: Props) {
+export default function HomeSection({ c, t, onJump, gh, lang }: Props) {
+  // Direct-download links for the two CV PDFs. Served from /public,
+  // filename overridden so users get a readable name on save.
+  const cvPdfHref =
+    lang === "es"
+      ? "/guillermo-puente-cv-es.pdf"
+      : "/guillermo-puente-cv-en.pdf";
+  const cvPdfDownload =
+    lang === "es" ? "Guillermo Puente - CV ES.pdf" : "Guillermo Puente - CV EN.pdf";
+
   return (
     <div>
       <div
@@ -57,8 +66,12 @@ export default function HomeSection({ c, t, onJump, gh }: Props) {
       </div>
 
       <div style={{ display: "flex", gap: 12, marginTop: 36, flexWrap: "wrap" }}>
-        <button
-          onClick={() => onJump("projects")}
+        {/* CV — primary CTA. Recruiters scan for this first, so it wins
+            the solid style and the leftmost slot. Real anchor (not a
+            button) so it's a direct, shareable link to /cv and
+            middle-click / right-click work as expected. */}
+        <a
+          href="/cv"
           style={{
             background: c.ink,
             color: c.paper,
@@ -72,10 +85,38 @@ export default function HomeSection({ c, t, onJump, gh }: Props) {
             alignItems: "center",
             gap: 8,
             fontFamily: "inherit",
+            textDecoration: "none",
           }}
         >
-          {t.ctaProjects} <ArrowUpRight size={15} />
-        </button>
+          <FileText size={15} />
+          {t.ctaCV}
+        </a>
+        {/* Direct PDF download — outlined, sits right after "View CV"
+            so the download path is one click from first view. The
+            `download` attribute forces the browser to save (vs open
+            inline) and sets a human-readable filename. */}
+        <a
+          href={cvPdfHref}
+          download={cvPdfDownload}
+          style={{
+            background: "transparent",
+            color: c.ink,
+            border: `1px solid ${c.inkFaint}`,
+            padding: "12px 20px",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontSize: 14,
+            letterSpacing: ".02em",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontFamily: "inherit",
+            textDecoration: "none",
+          }}
+        >
+          <Download size={15} />
+          {t.ctaCVDownload}
+        </a>
         <button
           onClick={() => onJump("contact")}
           style={{
@@ -91,6 +132,25 @@ export default function HomeSection({ c, t, onJump, gh }: Props) {
           }}
         >
           {t.ctaContact}
+        </button>
+        <button
+          onClick={() => onJump("projects")}
+          style={{
+            background: "transparent",
+            color: c.ink,
+            border: `1px solid ${c.inkFaint}`,
+            padding: "12px 20px",
+            borderRadius: 8,
+            cursor: "pointer",
+            fontSize: 14,
+            letterSpacing: ".02em",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontFamily: "inherit",
+          }}
+        >
+          {t.ctaProjects} <ArrowUpRight size={15} />
         </button>
       </div>
 

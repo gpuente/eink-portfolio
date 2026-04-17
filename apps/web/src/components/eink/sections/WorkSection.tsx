@@ -22,7 +22,7 @@ export default function WorkSection({ c, t, lang }: Props) {
       <div>
         {EXPERIENCE.map((e, i) => (
           <div
-            key={`${e.org}-${e.when}`}
+            key={`${e.org}-${e.when_en}`}
             style={{
               display: "grid",
               gridTemplateColumns: "48px 1fr auto",
@@ -62,7 +62,7 @@ export default function WorkSection({ c, t, lang }: Props) {
               className="mono"
               style={{ fontSize: 11, color: c.inkSoft, letterSpacing: ".1em" }}
             >
-              {e.when}
+              {lang === "es" ? e.when_es : e.when_en}
             </span>
           </div>
         ))}

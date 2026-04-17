@@ -37,13 +37,14 @@ import DeviceReveal from "./eink/ui/DeviceReveal";
 const REVEAL_HEIGHT = 500;
 
 const MODE_STORAGE_KEY = "eink-mode";
+const LANG_STORAGE_KEY = "eink-lang";
 
 export default function EinkPortfolio() {
   const [mode, setMode] = useState<Mode>("light");
   const [lang, setLang] = useState<Lang>("en");
   const [now, setNow] = useState<Date>(new Date());
   const [chatOpen, setChatOpen] = useState<boolean>(false);
-  // Gates the localStorage write effect so the default "light" doesn't
+  // Gates the localStorage write effect so the hardcoded defaults don't
   // clobber the saved value on first mount before the read effect runs.
   const [hydrated, setHydrated] = useState<boolean>(false);
 
@@ -77,13 +78,17 @@ export default function EinkPortfolio() {
     return () => clearInterval(id);
   }, []);
 
-  // Read the persisted theme once on mount; gated by typeof checks because
-  // the component is rendered server-side at build time via client:load.
+  // Read persisted theme + language once on mount; gated by typeof checks
+  // because the component is rendered server-side at build time via
+  // client:load. The CV page (/cv) writes to the same keys from vanilla JS,
+  // so preferences stay in sync across the portfolio and the CV.
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const saved = window.localStorage.getItem(MODE_STORAGE_KEY);
-      if (saved === "light" || saved === "dark") setMode(saved);
+      const savedMode = window.localStorage.getItem(MODE_STORAGE_KEY);
+      if (savedMode === "light" || savedMode === "dark") setMode(savedMode);
+      const savedLang = window.localStorage.getItem(LANG_STORAGE_KEY);
+      if (savedLang === "en" || savedLang === "es") setLang(savedLang);
     } catch {
       // localStorage can throw in private-mode Safari / sandboxed iframes — ignore.
     }
@@ -99,6 +104,16 @@ export default function EinkPortfolio() {
       // Same rationale as above — swallow quota/permission errors.
     }
   }, [hydrated, mode]);
+
+  // Persist the language whenever the user toggles it (after hydration).
+  useEffect(() => {
+    if (!hydrated || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(LANG_STORAGE_KEY, lang);
+    } catch {
+      // Same rationale as above.
+    }
+  }, [hydrated, lang]);
 
   /**
    * Keep the browser chrome colour in sync with the in-app mode toggle.
@@ -197,6 +212,11 @@ export default function EinkPortfolio() {
           <AboutSection c={c} t={t} />
         </section>
 
+        <Divider c={c} label={t.sectionWork} />
+        <section ref={refs.work} data-section="work">
+          <WorkSection c={c} t={t} lang={lang} />
+        </section>
+
         <Divider c={c} label={t.sectionProjects} />
         <section ref={refs.projects} data-section="projects">
           <ProjectsSection c={c} t={t} lang={lang} />
@@ -205,11 +225,6 @@ export default function EinkPortfolio() {
         <Divider c={c} label={t.sectionTalks} />
         <section ref={refs.talks} data-section="talks">
           <TalksSection c={c} t={t} lang={lang} />
-        </section>
-
-        <Divider c={c} label={t.sectionWork} />
-        <section ref={refs.work} data-section="work">
-          <WorkSection c={c} t={t} lang={lang} />
         </section>
 
         <Divider c={c} label={t.sectionBackground} />

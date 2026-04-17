@@ -22,9 +22,9 @@ export const PROJECTS: Project[] = [
     kind_es: "Toolkit de operaciones descentralizadas · MakerDAO SES",
     year: "2023 —",
     note_en:
-      "Operations toolkit for DAOs and open organizations. Five integrated modules: Renown (Ethereum-based identity and reputation), Connect (team collaboration), Fusion (document management), Switchboard (data integration and automation), and Academy. Built with React, TypeScript, Electron, GraphQL, Redux, and TailwindCSS. MakerDAO is the flagship case study.",
+      "Operations toolkit for DAOs and open organizations. Five integrated modules: Renown (Ethereum-based identity and reputation), Connect (team collaboration), Fusion (document management), Switchboard (data integration and automation), and Academy. Built with React, TypeScript, Electron, GraphQL, Redux, and TailwindCSS. MakerDAO is the flagship case study. Also ships Reactor MCP — an MCP server coding agents (Claude Code, Cursor) connect to for scaffolding document models, editors, drives, and documents end-to-end.",
     note_es:
-      "Toolkit de operaciones para DAOs y organizaciones abiertas. Cinco módulos integrados: Renown (identidad y reputación basadas en Ethereum), Connect (colaboración de equipo), Fusion (gestión documental), Switchboard (integración y automatización de datos) y Academy. Construido con React, TypeScript, Electron, GraphQL, Redux y TailwindCSS. MakerDAO es el caso de uso principal.",
+      "Toolkit de operaciones para DAOs y organizaciones abiertas. Cinco módulos integrados: Renown (identidad y reputación basadas en Ethereum), Connect (colaboración de equipo), Fusion (gestión documental), Switchboard (integración y automatización de datos) y Academy. Construido con React, TypeScript, Electron, GraphQL, Redux y TailwindCSS. MakerDAO es el caso de uso principal. Incluye además Reactor MCP — un servidor MCP al que los coding agents (Claude Code, Cursor) se conectan para scaffolding de document models, editors, drives y documentos de punta a punta.",
     href: "https://www.powerhouse.inc/",
     repo: null,
   },
@@ -34,9 +34,9 @@ export const PROJECTS: Project[] = [
     kind_es: "Cliente multiplataforma · Evernote",
     year: "2021 — 2023",
     note_en:
-      "Note-taking product across iOS, Android, desktop (Windows, macOS, Linux), and web. Shipped features and maintained the client-service contact surface, including AI Note Cleanup — Evernote's first AI-powered feature — and the Tasks feature used by millions.",
+      "Note-taking product across iOS, Android, desktop (Windows, macOS, Linux), and web. Shipped AI Note Cleanup — Evernote's first AI-powered feature, launched mid-2023 as a 20% public beta before company-wide GA — owning the server-side OpenAI orchestration and the in-editor UX. Also delivered and maintained Tasks, used daily by millions.",
     note_es:
-      "Producto de toma de notas en iOS, Android, desktop (Windows, macOS, Linux) y web. Envié features y mantuve el área de contacto entre clientes y servicios, incluyendo AI Note Cleanup — la primera feature con IA del producto — y Tasks, usada por millones.",
+      "Producto de toma de notas en iOS, Android, desktop (Windows, macOS, Linux) y web. Envié AI Note Cleanup — la primera feature con IA del producto, lanzada a mitad de 2023 como public beta al 20% antes del GA a toda la compañía — a cargo de la orquestación server-side con OpenAI y del UX dentro del editor. También envié y mantuve Tasks, usada a diario por millones.",
     href: "https://evernote.com",
     repo: null,
   },
@@ -66,13 +66,13 @@ export const PROJECTS: Project[] = [
   },
   {
     title: "Plug Wallet",
-    kind_en: "Crypto · Internet Computer",
-    kind_es: "Crypto · Internet Computer",
-    year: "2021",
+    kind_en: "Crypto · Multi-chain browser extension",
+    kind_es: "Crypto · Extensión multi-chain",
+    year: "2021 —",
     note_en:
-      "Browser-extension wallet for the Internet Computer. Hold, send, and swap ICP, Cycles, and NFTs. Built at Fleek.",
+      "Browser-extension crypto wallet. Originally shipped for the Internet Computer (ICP, Cycles, NFTs); has since grown into a multi-chain wallet supporting BTC, ETH, SOL, ICP, and Odin with cross-chain swaps and in-wallet staking. Led frontend architecture at Fleek; shipped to the Chrome Web Store.",
     note_es:
-      "Wallet (extensión de navegador) para Internet Computer. Guarda, envía y cambia ICP, Cycles y NFTs. Construida en Fleek.",
+      "Extensión de navegador crypto. Originalmente solo Internet Computer (ICP, Cycles, NFTs); hoy wallet multi-chain que soporta BTC, ETH, SOL, ICP y Odin con cross-chain swaps e in-wallet staking. Lideré la arquitectura frontend en Fleek; publicada en la Chrome Web Store.",
     href: "https://chromewebstore.google.com/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm",
     repo: "https://github.com/Psychedelic/plug",
   },
@@ -144,9 +144,9 @@ export const PROJECTS: Project[] = [
     kind_es: "E-commerce · en Groupon",
     year: "2017",
     note_en:
-      "Part of the team that rebuilt the Groupon e-commerce experience from scratch for Latin America. React, RxJS, Redis, MongoDB, MySQL, and a microservice architecture.",
+      "Founding engineer on the rebuild of Groupon's LATAM e-commerce platform from scratch — ~5 core markets (Brazil, Chile, Argentina, Mexico, Colombia) serving tens of millions of users. Owned Node.js microservices and their React frontends. Stack: React, RxJS, Node.js, Redis, MongoDB, MySQL, REST, microservices.",
     note_es:
-      "Parte del equipo que reconstruyó la experiencia de e-commerce de Groupon desde cero para Latinoamérica. React, RxJS, Redis, MongoDB, MySQL y una arquitectura basada en microservicios.",
+      "Ingeniero fundador del equipo que reconstruyó la plataforma de e-commerce de Groupon para LATAM desde cero — ~5 mercados principales (Brasil, Chile, Argentina, México, Colombia) con decenas de millones de usuarios. A cargo de microservicios Node.js y sus frontends React. Stack: React, RxJS, Node.js, Redis, MongoDB, MySQL, REST, microservicios.",
     href: "https://www.groupon.com/",
     repo: null,
   },

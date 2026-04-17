@@ -10,6 +10,8 @@ export type Copy = {
 
   ctaProjects: string;
   ctaContact: string;
+  ctaCV: string;
+  ctaCVDownload: string;
 
   meta: { status: string; stack: string; based: string; tz: string };
   metaValues: { status: string; stack: string; based: string; tz: string };
@@ -100,10 +102,12 @@ export const COPY: Record<Lang, Copy> = {
     heroEm: "intersection of AI, product, and Web3",
     heroB: ".",
     tagline:
-      "Senior full-stack engineer with 10+ years shipping products at MakerDAO SES, Evernote, Fleek, Groupon, and ComparaOnline — recently focused on AI integration: LLMs, RAG, and agents.",
+      "Senior full-stack engineer with 10+ years shipping products at MakerDAO SES, Evernote, Fleek, Groupon, and ComparaOnline — focused on AI integration (LLMs, RAG, agents) and on using Claude Code to accelerate delivery across large monorepos.",
 
     ctaProjects: "See projects",
     ctaContact: "Get in touch",
+    ctaCV: "View CV",
+    ctaCVDownload: "Download PDF",
 
     meta: { status: "Status", stack: "Stack", based: "Based in", tz: "Timezone" },
     metaValues: {
@@ -114,9 +118,9 @@ export const COPY: Record<Lang, Copy> = {
     },
 
     sectionAbout: "§ 01 · About",
-    sectionProjects: "§ 02 · Projects",
-    sectionTalks: "§ 03 · Talks",
-    sectionWork: "§ 04 · Work",
+    sectionWork: "§ 02 · Work",
+    sectionProjects: "§ 03 · Projects",
+    sectionTalks: "§ 04 · Talks",
     sectionBackground: "§ 05 · Background",
     sectionContact: "§ 06 · Contact",
 
@@ -137,13 +141,13 @@ export const COPY: Record<Lang, Copy> = {
     aboutP1:
       "I'm a senior full-stack engineer based in Santiago, Chile. Over the past decade I've built web platforms, developer tooling, and distributed systems for products used by millions — at MakerDAO SES, Evernote, Fleek, Groupon, and ComparaOnline.",
     aboutP2:
-      "Recent work has centered on AI integration: LLMs, RAG, agents, and embeddings shipped into product features and developer-productivity workflows. I contributed to Evernote's AI Note Cleanup — its first AI-powered feature — and now build Powerhouse, a Web3 platform, at MakerDAO SES.",
+      "Recent work spans AI-powered features (LLMs, RAG, tool-calling agents) shipped to production and wallet-based identity infrastructure (EVM, DID, signature flows) powering DAO tooling. I shipped Evernote's first AI-powered feature — AI Note Cleanup — and now own core architectural pillars of Powerhouse, MakerDAO SES's DAO operations platform, where I also shipped features on Renown, its wallet-based identity + credential SDK.",
     aboutP3:
       "I work at the intersection of AI, product engineering, and Web3. Before software, I trained as an accountant — a background that still shapes how I engineer: numbers should reconcile, invariants should hold, and the details are rarely negotiable.",
 
     currently: "Currently",
     currentlyValue:
-      "Frontend Engineer at MakerDAO SES, building Powerhouse — a Web3 platform for DAOs and ecosystem actors. Day-to-day work spans AI integration (LLMs, RAG, agents) and product engineering.",
+      "Senior Software Engineer at MakerDAO SES, owning core architectural pillars of Powerhouse — a DAO operations platform — across ~2,100 commits. Day-to-day spans design-system ownership, wallet-based identity work on Renown, and heavy use of Claude Code to move fast across the monorepo.",
 
     workTitle: "Work history.",
 
@@ -220,10 +224,12 @@ export const COPY: Record<Lang, Copy> = {
     heroEm: "intersección entre IA, producto y Web3",
     heroB: ".",
     tagline:
-      "Ingeniero full-stack senior con más de 10 años enviando productos en MakerDAO SES, Evernote, Fleek, Groupon y ComparaOnline — recientemente enfocado en integración de IA: LLMs, RAG y agents.",
+      "Ingeniero full-stack senior con más de 10 años enviando productos en MakerDAO SES, Evernote, Fleek, Groupon y ComparaOnline — enfocado en integración de IA (LLMs, RAG, agents) y en usar Claude Code para acelerar la entrega en monorepos grandes.",
 
     ctaProjects: "Ver proyectos",
     ctaContact: "Hablemos",
+    ctaCV: "Ver CV",
+    ctaCVDownload: "Descargar PDF",
 
     meta: { status: "Estado", stack: "Stack", based: "Ubicación", tz: "Zona horaria" },
     metaValues: {
@@ -234,9 +240,9 @@ export const COPY: Record<Lang, Copy> = {
     },
 
     sectionAbout: "§ 01 · Sobre mí",
-    sectionProjects: "§ 02 · Proyectos",
-    sectionTalks: "§ 03 · Charlas",
-    sectionWork: "§ 04 · Trabajo",
+    sectionWork: "§ 02 · Trabajo",
+    sectionProjects: "§ 03 · Proyectos",
+    sectionTalks: "§ 04 · Charlas",
     sectionBackground: "§ 05 · Formación",
     sectionContact: "§ 06 · Contacto",
 
@@ -257,13 +263,13 @@ export const COPY: Record<Lang, Copy> = {
     aboutP1:
       "Soy ingeniero full-stack senior, basado en Santiago, Chile. Durante más de una década he construido plataformas web, herramientas para desarrolladores y sistemas distribuidos para productos usados por millones — en MakerDAO SES, Evernote, Fleek, Groupon y ComparaOnline.",
     aboutP2:
-      "Mi trabajo reciente se ha centrado en la integración de IA: LLMs, RAG, agents y embeddings llevados a features de producto y workflows de productividad para desarrolladores. Contribuí a Evernote AI Note Cleanup — la primera feature con IA del producto — y ahora construyo Powerhouse, una plataforma Web3, en MakerDAO SES.",
+      "Mi trabajo reciente combina features con IA (LLMs, RAG, agents tool-calling) enviadas a producción e infraestructura de identidad basada en wallet (EVM, DID, firmas) que sostiene tooling para DAOs. Envié AI Note Cleanup, la primera feature con IA de Evernote, y ahora trabajo sobre los pilares arquitectónicos de Powerhouse — la plataforma de operaciones para DAOs de MakerDAO SES —, donde también envié features sobre Renown, su SDK de identidad y credenciales basado en wallet.",
     aboutP3:
       "Trabajo en la intersección entre IA, ingeniería de producto y Web3. Antes del software me formé como contador — un background que todavía moldea cómo hago ingeniería: los números deben cuadrar, los invariantes deben sostenerse y los detalles rara vez son negociables.",
 
     currently: "Ahora mismo",
     currentlyValue:
-      "Ingeniero Frontend en MakerDAO SES, construyendo Powerhouse — una plataforma Web3 para DAOs y actores del ecosistema. El día a día combina integración de IA (LLMs, RAG, agents) e ingeniería de producto.",
+      "Senior Software Engineer en MakerDAO SES, a cargo de pilares arquitectónicos de Powerhouse — plataforma de operaciones para DAOs — con ~2.100 commits. El día a día combina design system, trabajo sobre Renown (identidad basada en wallet) y uso intensivo de Claude Code para moverme rápido sobre el monorepo.",
 
     workTitle: "Historia laboral.",
 

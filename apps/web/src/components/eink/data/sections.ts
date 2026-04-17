@@ -13,9 +13,9 @@ export type Section = {
 export const SECTIONS = (t: Copy): Section[] => [
   { id: "home", label: t.nav.home, icon: Home },
   { id: "about", label: t.nav.about, icon: User },
+  { id: "work", label: t.nav.work, icon: Briefcase },
   { id: "projects", label: t.nav.projects, icon: FolderGit2 },
   { id: "talks", label: t.nav.talks, icon: Mic },
-  { id: "work", label: t.nav.work, icon: Briefcase },
   { id: "background", label: t.nav.background, icon: GraduationCap },
   { id: "contact", label: t.nav.contact, icon: Mail },
 ];
