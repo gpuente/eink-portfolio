@@ -1,7 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { HelpCircle, Send, Trash2, X } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  ChevronRight,
+  HelpCircle,
+  Loader2,
+  Send,
+  Trash2,
+  X,
+} from "lucide-react";
 import Markdown from "react-markdown";
 import type { Palette, Mode } from "../data/palettes";
 import type { Copy } from "../data/copy";
@@ -36,6 +45,212 @@ function messageText(m: UIMessage): string {
     .filter((p): p is { type: "text"; text: string } => p.type === "text")
     .map((p) => p.text)
     .join("");
+}
+
+/** Normalized shape for the tool-call timeline. Collapses AI-SDK v5 state
+ *  transitions (input-streaming → input-available → output-available / error)
+ *  down to three runtime states the UI cares about. */
+type ToolCall = {
+  id: string;
+  toolName: string;
+  state: "running" | "done" | "error";
+  input?: unknown;
+  output?: unknown;
+  errorText?: string;
+};
+
+/** Pull tool-call parts out of a UIMessage in stable order. The AI SDK v5 UI
+ *  Message protocol encodes tool calls as parts with `type = "tool-${name}"`
+ *  (static tools registered on the server) or `type = "dynamic-tool"` (runtime
+ *  MCP tools — not used here but handled defensively). Parts carry a `state`
+ *  field: `input-streaming`, `input-available`, `output-available`, or
+ *  `output-error`. We collate by `toolCallId` so repeated state updates on
+ *  the same call collapse into a single row. */
+function extractToolCalls(m: UIMessage): ToolCall[] {
+  const byId = new Map<string, ToolCall>();
+  // `UIMessage.parts` is a union of ~10 part types; the tool-* ones aren't
+  // publicly exported. Cast to a permissive shape and read defensively.
+  for (const raw of m.parts as Array<Record<string, unknown>>) {
+    const type = typeof raw.type === "string" ? raw.type : "";
+    let toolName: string | undefined;
+    if (type === "dynamic-tool") {
+      toolName = typeof raw.toolName === "string" ? raw.toolName : undefined;
+    } else if (type.startsWith("tool-")) {
+      toolName = type.slice("tool-".length);
+    }
+    if (!toolName) continue;
+
+    const id =
+      typeof raw.toolCallId === "string" && raw.toolCallId
+        ? raw.toolCallId
+        : `${toolName}-${byId.size}`;
+
+    let state: ToolCall["state"] = "running";
+    if (raw.state === "output-available") state = "done";
+    else if (raw.state === "output-error") state = "error";
+
+    byId.set(id, {
+      id,
+      toolName,
+      state,
+      input: raw.input,
+      output: raw.output,
+      errorText: typeof raw.errorText === "string" ? raw.errorText : undefined,
+    });
+  }
+  return Array.from(byId.values());
+}
+
+/** Single row in the tool-call timeline. Icon changes with state (spinner →
+ *  check → alert), label is human-friendly from i18n, and clicking the row
+ *  expands a small mono block with the raw input + output JSON — nice easter
+ *  egg for recruiters poking at the panel. */
+function ToolCallRow({
+  call,
+  c,
+  t,
+}: {
+  call: ToolCall;
+  c: Palette;
+  t: Copy["chat"];
+}) {
+  const [open, setOpen] = useState(false);
+  // Pick the i18n block for this tool name; fall back to the generic "unknown"
+  // copy if the server ever exposes a tool the client doesn't know about.
+  const labels =
+    call.toolName === "searchProfile"
+      ? t.tools.searchProfile
+      : call.toolName === "checkAvailability"
+        ? t.tools.checkAvailability
+        : call.toolName === "bookSlot"
+          ? t.tools.bookSlot
+          : call.toolName === "getGithubActivity"
+            ? t.tools.getGithubActivity
+            : t.tools.unknown;
+
+  const primary =
+    call.state === "error"
+      ? `${labels.done} · ${t.tools.errorLabel}`
+      : call.state === "running"
+        ? labels.running
+        : labels.done;
+
+  const Icon =
+    call.state === "running"
+      ? Loader2
+      : call.state === "error"
+        ? AlertCircle
+        : Check;
+
+  const hasDetails =
+    call.input !== undefined ||
+    call.output !== undefined ||
+    call.errorText !== undefined;
+
+  const fmt = (v: unknown) => {
+    try {
+      return JSON.stringify(v, null, 2);
+    } catch {
+      return String(v);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <button
+        type="button"
+        onClick={() => hasDetails && setOpen((o) => !o)}
+        disabled={!hasDetails}
+        aria-expanded={open}
+        aria-label={open ? t.tools.collapseLabel : t.tools.expandLabel}
+        className="mono"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          background: "transparent",
+          border: "none",
+          color: c.inkSoft,
+          padding: "2px 2px",
+          fontSize: 10,
+          letterSpacing: ".12em",
+          textTransform: "uppercase",
+          cursor: hasDetails ? "pointer" : "default",
+          textAlign: "left",
+        }}
+      >
+        <Icon
+          size={12}
+          className={call.state === "running" ? "tool-spin" : undefined}
+          style={{
+            color:
+              call.state === "error"
+                ? c.inkSoft
+                : call.state === "done"
+                  ? c.ink
+                  : c.inkSoft,
+            flexShrink: 0,
+          }}
+        />
+        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {primary}
+        </span>
+        {hasDetails && (
+          <ChevronRight
+            size={10}
+            style={{
+              opacity: 0.6,
+              transition: "transform 200ms ease",
+              transform: open ? "rotate(90deg)" : "none",
+              flexShrink: 0,
+            }}
+          />
+        )}
+      </button>
+      {open && hasDetails && (
+        <pre
+          className="mono"
+          style={{
+            margin: 0,
+            padding: "8px 10px",
+            background: c.paperBright,
+            border: `1px solid ${c.inkFaint}`,
+            borderRadius: 6,
+            fontSize: 10.5,
+            lineHeight: 1.5,
+            color: c.inkSoft,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            maxHeight: 220,
+            overflow: "auto",
+          }}
+        >
+          {call.input !== undefined && (
+            <>
+              <strong style={{ fontWeight: 500, color: c.ink }}>{t.tools.inputLabel}:</strong>
+              {"\n"}
+              {fmt(call.input)}
+              {"\n\n"}
+            </>
+          )}
+          {call.output !== undefined && (
+            <>
+              <strong style={{ fontWeight: 500, color: c.ink }}>{t.tools.outputLabel}:</strong>
+              {"\n"}
+              {fmt(call.output)}
+            </>
+          )}
+          {call.errorText && (
+            <>
+              <strong style={{ fontWeight: 500, color: c.ink }}>{t.tools.errorLabel}:</strong>
+              {"\n"}
+              {call.errorText}
+            </>
+          )}
+        </pre>
+      )}
+    </div>
+  );
 }
 
 export default function ChatPanel({ c, mode, t, open, onClose }: Props) {
@@ -375,63 +590,121 @@ export default function ChatPanel({ c, mode, t, open, onClose }: Props) {
           </div>
         )}
 
-        {messages.map((m) => {
-          const text = messageText(m);
-          if (!text) return null;
-          const isUser = m.role === "user";
-          return (
-            <div
-              key={m.id}
-              className={isUser ? undefined : "chat-md"}
-              style={{
-                alignSelf: isUser ? "flex-end" : "flex-start",
-                maxWidth: "85%",
-                background: isUser ? c.ink : c.paperBright,
-                color: isUser ? c.paper : c.ink,
-                border: isUser ? "none" : `1px solid ${c.inkFaint}`,
-                borderRadius: 12,
-                padding: "10px 14px",
-                fontSize: 14,
-                lineHeight: 1.55,
-                whiteSpace: isUser ? "pre-wrap" : "normal",
-                wordBreak: "break-word",
-              }}
-            >
-              {isUser ? (
-                text
-              ) : (
-                <Markdown
-                  components={{
-                    // Open every link in a new tab; noreferrer for safety.
-                    a: ({ href, children, ...rest }) => (
-                      <a href={href} target="_blank" rel="noreferrer" {...rest}>
-                        {children}
-                      </a>
-                    ),
-                  }}
-                >
-                  {text}
-                </Markdown>
-              )}
-            </div>
-          );
-        })}
-
-        {isBusy && (
-          <div
-            className="mono"
-            style={{
-              alignSelf: "flex-start",
-              fontSize: 11,
-              color: c.inkSoft,
-              letterSpacing: ".15em",
-              textTransform: "uppercase",
-              padding: "4px 4px",
-            }}
-          >
-            <span className="chat-thinking">{t.thinking}</span>
-          </div>
-        )}
+        {/* Locate the last user message so we know where to anchor the
+            initial "Thinking…" pulse. Thinking is ONLY shown in the gap
+            between submitting and the first assistant output — once any
+            tool-call or text-delta arrives for the next assistant message,
+            Thinking is replaced by that live progress. */}
+        {(() => {
+          let lastUserIdx = -1;
+          for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].role === "user") {
+              lastUserIdx = i;
+              break;
+            }
+          }
+          // Does the assistant message immediately after the last user prompt
+          // already have something renderable (a text part or a tool-call
+          // part)? If yes, the agent has started producing output and we hide
+          // the Thinking pulse; its job was to cover the empty gap.
+          const nextAssistant =
+            lastUserIdx >= 0 ? messages[lastUserIdx + 1] : undefined;
+          const hasAssistantContent =
+            nextAssistant != null &&
+            nextAssistant.role === "assistant" &&
+            (messageText(nextAssistant).length > 0 ||
+              extractToolCalls(nextAssistant).length > 0);
+          return messages.map((m, i) => {
+            const isUser = m.role === "user";
+            // Assistant messages can carry tool-call parts alongside (or
+            // before) their text — render the tool timeline above the text
+            // bubble so recruiters see the full sequence of steps the agent
+            // took.
+            const toolCalls = isUser ? [] : extractToolCalls(m);
+            const text = messageText(m);
+            const hasBlock = isUser || !!text || toolCalls.length > 0;
+            const showThinkingAfter =
+              isBusy && i === lastUserIdx && !hasAssistantContent;
+            return (
+              <Fragment key={m.id}>
+                {hasBlock && (
+                  <div
+                    style={{
+                      alignSelf: isUser ? "flex-end" : "flex-start",
+                      maxWidth: "85%",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 6,
+                    }}
+                  >
+                    {toolCalls.length > 0 && (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2,
+                          padding: "2px 0 4px",
+                        }}
+                      >
+                        {toolCalls.map((call) => (
+                          <ToolCallRow key={call.id} call={call} c={c} t={t} />
+                        ))}
+                      </div>
+                    )}
+                    {text && (
+                      <div
+                        className={isUser ? undefined : "chat-md"}
+                        style={{
+                          background: isUser ? c.ink : c.paperBright,
+                          color: isUser ? c.paper : c.ink,
+                          border: isUser ? "none" : `1px solid ${c.inkFaint}`,
+                          borderRadius: 12,
+                          padding: "10px 14px",
+                          fontSize: 14,
+                          lineHeight: 1.55,
+                          whiteSpace: isUser ? "pre-wrap" : "normal",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {isUser ? (
+                          text
+                        ) : (
+                          <Markdown
+                            components={{
+                              // Open every link in a new tab; noreferrer for safety.
+                              a: ({ href, children, ...rest }) => (
+                                <a href={href} target="_blank" rel="noreferrer" {...rest}>
+                                  {children}
+                                </a>
+                              ),
+                            }}
+                          >
+                            {text}
+                          </Markdown>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {showThinkingAfter && (
+                  <div
+                    className="mono"
+                    style={{
+                      alignSelf: "flex-start",
+                      fontSize: 11,
+                      color: c.inkSoft,
+                      letterSpacing: ".15em",
+                      textTransform: "uppercase",
+                      padding: "4px 4px",
+                    }}
+                  >
+                    <span className="chat-thinking">{t.thinking}</span>
+                  </div>
+                )}
+              </Fragment>
+            );
+          });
+        })()}
 
         {status === "error" && error && (
           <div

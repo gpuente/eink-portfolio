@@ -93,6 +93,18 @@ export type Copy = {
     thinking: string;
     error: string;
     poweredBy: string;
+    tools: {
+      searchProfile: { running: string; done: string };
+      checkAvailability: { running: string; done: string };
+      bookSlot: { running: string; done: string };
+      getGithubActivity: { running: string; done: string };
+      unknown: { running: string; done: string };
+      errorLabel: string;
+      expandLabel: string;
+      collapseLabel: string;
+      inputLabel: string;
+      outputLabel: string;
+    };
   };
 };
 
@@ -218,6 +230,30 @@ export const COPY: Record<Lang, Copy> = {
       thinking: "Thinking…",
       error: "Something went wrong. Try again in a moment.",
       poweredBy: "Powered by retrieval over his portfolio.",
+      tools: {
+        searchProfile: {
+          running: "Searching the knowledge base",
+          done: "Searched the knowledge base",
+        },
+        checkAvailability: {
+          running: "Checking availability",
+          done: "Checked availability",
+        },
+        bookSlot: {
+          running: "Generating booking link",
+          done: "Generated booking link",
+        },
+        getGithubActivity: {
+          running: "Fetching live GitHub data",
+          done: "Fetched GitHub data",
+        },
+        unknown: { running: "Calling tool", done: "Tool finished" },
+        errorLabel: "Failed",
+        expandLabel: "Details",
+        collapseLabel: "Hide",
+        inputLabel: "Input",
+        outputLabel: "Output",
+      },
     },
   },
 
@@ -342,6 +378,30 @@ export const COPY: Record<Lang, Copy> = {
       thinking: "Pensando…",
       error: "Algo salió mal. Probá de nuevo en un momento.",
       poweredBy: "Impulsado por retrieval sobre su portafolio.",
+      tools: {
+        searchProfile: {
+          running: "Buscando en la base de conocimiento",
+          done: "Base de conocimiento consultada",
+        },
+        checkAvailability: {
+          running: "Consultando disponibilidad",
+          done: "Disponibilidad consultada",
+        },
+        bookSlot: {
+          running: "Generando link de reserva",
+          done: "Link de reserva generado",
+        },
+        getGithubActivity: {
+          running: "Consultando GitHub en vivo",
+          done: "GitHub consultado",
+        },
+        unknown: { running: "Llamando herramienta", done: "Herramienta completada" },
+        errorLabel: "Falló",
+        expandLabel: "Detalles",
+        collapseLabel: "Ocultar",
+        inputLabel: "Entrada",
+        outputLabel: "Salida",
+      },
     },
   },
 };

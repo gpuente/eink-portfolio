@@ -178,6 +178,13 @@ export default function GlobalStyles({ c }: Props) {
       }
       .chat-thinking { animation: chat-pulse 1.2s ease-in-out infinite; }
 
+      /* Tool-call row spinner. Slower than a typical loading spinner (1.4s
+         instead of 0.8s) so it reads as "the agent is working" rather than
+         "something is loading" — matches the calm e-ink pacing of the rest
+         of the UI. */
+      @keyframes tool-spin { to { transform: rotate(360deg); } }
+      .tool-spin { animation: tool-spin 1.4s linear infinite; transform-origin: 50% 50%; }
+
       /* Schedule CTA nudge — 3s cycle so the button pulls the eye regularly
          without being ignored. Shake phase is ~450ms of a 3000ms cycle
          (85% still, 15% motion) — short enough that it reads as "tap for
