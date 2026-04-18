@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -14,6 +15,65 @@ import {
   PUBLIC_SCHEDULING_URL,
 } from "./lib/calendly.ts";
 import { getGithubInfo } from "./lib/github.ts";
+import { logger } from "./lib/logger.ts";
+import {
+  llmTokensTotal,
+  ragRequestsTotal,
+  ragStepDuration,
+  registry,
+  toolDuration,
+} from "./lib/metrics.ts";
+
+/** Wrap a tool's execute() to emit a `tool_duration_seconds` histogram
+ *  sample + `rag.tool` log line with the trace_id of the request that
+ *  triggered it. Thrown exceptions are tagged `status=error`; tools that
+ *  return an error-shaped object are still counted as `status=success`
+ *  (the call itself didn't crash — the LLM will see the error object and
+ *  decide how to handle it). */
+async function withToolObservability<T>(
+  toolName: string,
+  traceId: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const start = performance.now();
+  const endTimer = toolDuration.startTimer({ tool: toolName });
+  try {
+    const result = await fn();
+    endTimer({ status: "success" });
+    logger.info("rag.tool", {
+      trace_id: traceId,
+      tool: toolName,
+      status: "success",
+      duration_ms: Math.round(performance.now() - start),
+    });
+    return result;
+  } catch (err) {
+    endTimer({ status: "error" });
+    logger.error("rag.tool", {
+      trace_id: traceId,
+      tool: toolName,
+      status: "error",
+      duration_ms: Math.round(performance.now() - start),
+      error: err instanceof Error ? err.message : String(err),
+    });
+    throw err;
+  }
+}
+
+/** Walk back through the UI messages to find the last user turn and flatten
+ *  its text parts into a single string. Used purely for log correlation —
+ *  lets you grep VictoriaLogs by snippet of the original question. */
+function lastUserQuery(messages: UIMessage[]): string | undefined {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (!m || m.role !== "user") continue;
+    return m.parts
+      .filter((p): p is { type: "text"; text: string } => p.type === "text")
+      .map((p) => p.text)
+      .join("");
+  }
+  return undefined;
+}
 
 /**
  * Returns the final system prompt with the CURRENT UTC timestamp injected at
@@ -139,7 +199,30 @@ app.use(
   }),
 );
 
+// Request logger. Skips /health (liveness ping) and /metrics (Fly's
+// Prometheus scraper hits it every ~15s) — both are very chatty and
+// have no diagnostic value in application logs.
+app.use("*", async (c, next) => {
+  const start = performance.now();
+  await next();
+  const path = c.req.path;
+  if (path === "/health" || path === "/metrics") return;
+  logger.info("http.request", {
+    method: c.req.method,
+    path,
+    status: c.res.status,
+    duration_ms: Math.round(performance.now() - start),
+  });
+});
+
 app.get("/health", (c) => c.json({ ok: true, service: "rag-server" }));
+
+// Prometheus scrape endpoint. Fly's Prometheus-on-Fly picks this up
+// automatically as long as the [metrics] block in fly.toml points at it.
+app.get("/metrics", async (c) => {
+  const body = await registry.metrics();
+  return c.text(body, 200, { "Content-Type": registry.contentType });
+});
 
 const ChatRequestSchema = z.object({
   messages: z.array(z.unknown()).min(1),
@@ -172,6 +255,30 @@ app.post("/chat", async (c) => {
   const allMessages = parsed.data.messages as UIMessage[];
   const messages = allMessages.slice(-env.MAX_HISTORY_MESSAGES);
 
+  // ── Observability: one traceId per RAG pipeline run, threaded through
+  // every sub-step (tools, logs, metrics). Grafana + VictoriaLogs can then
+  // reconstruct the whole request by filtering on `{trace_id="…"}`.
+  const traceId = randomUUID();
+  const requestStart = performance.now();
+  const totalTimer = ragStepDuration.startTimer({ step: "total" });
+  const llmTimer = ragStepDuration.startTimer({ step: "llm_generate" });
+  const llmStart = performance.now();
+  // Guard against onFinish + onError both firing (shouldn't happen, but
+  // prom-client observes on every call — defensive against double-count).
+  let timersStopped = false;
+  const stopTimers = () => {
+    if (timersStopped) return;
+    timersStopped = true;
+    llmTimer();
+    totalTimer();
+  };
+
+  logger.info("rag.pipeline.start", {
+    trace_id: traceId,
+    query: lastUserQuery(messages),
+    history_messages: messages.length,
+  });
+
   const result = streamText({
     model: chatModel,
     system: buildSystemPrompt(),
@@ -197,7 +304,10 @@ app.post("/chat", async (c) => {
             .default(5)
             .describe("How many chunks to retrieve (1–10)."),
         }),
-        execute: async ({ query, k }) => searchProfile(query, k),
+        execute: async ({ query, k }) =>
+          withToolObservability("searchProfile", traceId, () =>
+            searchProfile(query, k, traceId),
+          ),
       }),
 
       checkAvailability: tool({
@@ -221,40 +331,42 @@ app.post("/chat", async (c) => {
               "IANA timezone for the human-readable slot labels (e.g. 'America/New_York'). Defaults to 'America/Santiago' (Guillermo's tz).",
             ),
         }),
-        execute: async ({ startDate, endDate, displayTimezone }) => {
-          const start = new Date(startDate);
-          const end = new Date(endDate);
-          if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-            return { error: "Invalid ISO 8601 date. Use e.g. '2026-04-20T00:00:00Z'." };
-          }
-          if (end.getTime() - start.getTime() > 30 * 24 * 60 * 60 * 1000) {
-            return { error: "Window too large — pick a range within 30 days." };
-          }
-          if (end.getTime() <= Date.now()) {
-            return { error: "Window is entirely in the past." };
-          }
-          // Don't request slots in the past — Calendly rejects them.
-          const safeStart = start.getTime() < Date.now() ? new Date(Date.now() + 60_000) : start;
-          try {
-            const slots = await checkAvailability({
-              start: safeStart,
-              end,
-              displayTz: displayTimezone,
-            });
-            return {
-              count: slots.length,
-              slots: slots.slice(0, 30),
-              truncated: slots.length > 30,
-              timezone: displayTimezone ?? env.CALENDLY_DEFAULT_TZ,
-              publicSchedulingUrl: PUBLIC_SCHEDULING_URL,
-            };
-          } catch (e) {
-            return {
-              error: e instanceof Error ? e.message : "Unknown error",
-              publicSchedulingUrl: PUBLIC_SCHEDULING_URL,
-            };
-          }
-        },
+        execute: async ({ startDate, endDate, displayTimezone }) =>
+          withToolObservability("checkAvailability", traceId, async () => {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+              return { error: "Invalid ISO 8601 date. Use e.g. '2026-04-20T00:00:00Z'." };
+            }
+            if (end.getTime() - start.getTime() > 30 * 24 * 60 * 60 * 1000) {
+              return { error: "Window too large — pick a range within 30 days." };
+            }
+            if (end.getTime() <= Date.now()) {
+              return { error: "Window is entirely in the past." };
+            }
+            // Don't request slots in the past — Calendly rejects them.
+            const safeStart =
+              start.getTime() < Date.now() ? new Date(Date.now() + 60_000) : start;
+            try {
+              const slots = await checkAvailability({
+                start: safeStart,
+                end,
+                displayTz: displayTimezone,
+              });
+              return {
+                count: slots.length,
+                slots: slots.slice(0, 30),
+                truncated: slots.length > 30,
+                timezone: displayTimezone ?? env.CALENDLY_DEFAULT_TZ,
+                publicSchedulingUrl: PUBLIC_SCHEDULING_URL,
+              };
+            } catch (e) {
+              return {
+                error: e instanceof Error ? e.message : "Unknown error",
+                publicSchedulingUrl: PUBLIC_SCHEDULING_URL,
+              };
+            }
+          }),
       }),
 
       getGithubActivity: tool({
@@ -267,16 +379,17 @@ app.post("/chat", async (c) => {
               "profile = account metadata (bio, followers, public repos, location). recent_activity = last ~20 public events (pushes, PRs, releases, stars). top_repos = 10 most-starred owned repos. languages = aggregated primary-language count across owned repos. all = everything (use for broad 'what's he up to' questions).",
             ),
         }),
-        execute: async ({ kind }) => {
-          try {
-            return await getGithubInfo(kind);
-          } catch (e) {
-            return {
-              error: e instanceof Error ? e.message : "Unknown error",
-              profileUrl: `https://github.com/${env.GITHUB_USERNAME}`,
-            };
-          }
-        },
+        execute: async ({ kind }) =>
+          withToolObservability("getGithubActivity", traceId, async () => {
+            try {
+              return await getGithubInfo(kind);
+            } catch (e) {
+              return {
+                error: e instanceof Error ? e.message : "Unknown error",
+                profileUrl: `https://github.com/${env.GITHUB_USERNAME}`,
+              };
+            }
+          }),
       }),
 
       bookSlot: tool({
@@ -307,25 +420,59 @@ app.post("/chat", async (c) => {
               "Invitee's IANA timezone (e.g. 'America/New_York'). Determines how the preselected time is rendered on the Calendly page. Defaults to 'America/Santiago'.",
             ),
         }),
-        execute: async ({ startTime, timezone, name, email }) => {
-          const tz = timezone ?? env.CALENDLY_DEFAULT_TZ;
-          try {
-            const result = await bookSlot({ startTime, timezone, name, email });
-            return {
-              outcome: "ready",
-              startTime: result.startTime,
-              startTimeLocal: formatLocal(result.startTime, tz),
-              bookingUrl: result.bookingUrl,
-            };
-          } catch (e) {
-            return {
-              outcome: "error",
-              error: e instanceof Error ? e.message : "Unknown error",
-              fallbackUrl: PUBLIC_SCHEDULING_URL,
-            };
-          }
-        },
+        execute: async ({ startTime, timezone, name, email }) =>
+          withToolObservability("bookSlot", traceId, async () => {
+            const tz = timezone ?? env.CALENDLY_DEFAULT_TZ;
+            try {
+              const result = await bookSlot({ startTime, timezone, name, email });
+              return {
+                outcome: "ready",
+                startTime: result.startTime,
+                startTimeLocal: formatLocal(result.startTime, tz),
+                bookingUrl: result.bookingUrl,
+              };
+            } catch (e) {
+              return {
+                outcome: "error",
+                error: e instanceof Error ? e.message : "Unknown error",
+                fallbackUrl: PUBLIC_SCHEDULING_URL,
+              };
+            }
+          }),
       }),
+    },
+    onFinish: ({ usage, finishReason }) => {
+      stopTimers();
+      // `usage` in AI SDK v5 reports aggregate tokens across every step
+      // (initial tool-call decision + final answer generation) — which is
+      // what we want for cost tracking.
+      const inputTokens =
+        typeof usage?.inputTokens === "number" ? usage.inputTokens : 0;
+      const outputTokens =
+        typeof usage?.outputTokens === "number" ? usage.outputTokens : 0;
+      if (inputTokens > 0) llmTokensTotal.inc({ type: "input" }, inputTokens);
+      if (outputTokens > 0) llmTokensTotal.inc({ type: "output" }, outputTokens);
+      ragRequestsTotal.inc({ status: "success" });
+      logger.info("rag.pipeline.end", {
+        trace_id: traceId,
+        status: "success",
+        finish_reason: finishReason,
+        llm_ms: Math.round(performance.now() - llmStart),
+        total_ms: Math.round(performance.now() - requestStart),
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+      });
+    },
+    onError: ({ error }) => {
+      stopTimers();
+      ragRequestsTotal.inc({ status: "error" });
+      logger.error("rag.pipeline.end", {
+        trace_id: traceId,
+        status: "error",
+        error: error instanceof Error ? error.message : String(error),
+        llm_ms: Math.round(performance.now() - llmStart),
+        total_ms: Math.round(performance.now() - requestStart),
+      });
     },
   });
 

@@ -27,6 +27,15 @@ primary_region = "iad"
   PORT = "3001"
   # Non-sensitive tunables can live here. Sensitive ones must be secrets.
 
+# Prometheus scrape target. Fly's Prometheus-on-Fly hits this from within
+# the private network every ~15s and ships the samples to fly-metrics.net
+# (available in the Grafana dropdown as the "Prometheus on Fly" data source).
+# The path must match the Hono route; the port is the same one the HTTP
+# service listens on — single Node process serves both /chat and /metrics.
+[metrics]
+  port = 3001
+  path = "/metrics"
+
 [http_service]
   internal_port = 3001
   force_https = true
