@@ -14,6 +14,7 @@
     "ingest:reset": "tsx --env-file=.env src/scripts/ingest.ts --reset"
   },
   "dependencies": {
+    "@ai-sdk/gateway": "^3.0.104",
     "@ai-sdk/openai": "^2.0.0",
     "@datastax/astra-db-ts": "^2.0.0",
     "@hono/node-server": "^1.13.7",

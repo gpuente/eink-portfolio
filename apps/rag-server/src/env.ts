@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 const EnvSchema = z.object({
+  // Vercel AI Gateway — backs the chat model (Groq + other providers
+  // behind one API). OpenAI is still needed below for embeddings.
+  AI_GATEWAY_API_KEY: z.string().min(1, "AI_GATEWAY_API_KEY is required"),
   OPENAI_API_KEY: z.string().min(1, "OPENAI_API_KEY is required"),
   ASTRA_DB_APPLICATION_TOKEN: z.string().min(1, "ASTRA_DB_APPLICATION_TOKEN is required"),
   ASTRA_DB_API_ENDPOINT: z.string().url("ASTRA_DB_API_ENDPOINT must be a valid URL"),

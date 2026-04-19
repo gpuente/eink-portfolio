@@ -5,7 +5,7 @@ import { cors } from "hono/cors";
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
 import { z } from "zod";
 import { env, corsOrigins } from "./env.ts";
-import { chatModel } from "./lib/openai.ts";
+import { chatModel, chatModelProviderOptions } from "./lib/openai.ts";
 import { searchProfile } from "./lib/retrieve.ts";
 import { checkRateLimit, clientIp } from "./lib/rateLimit.ts";
 import {
@@ -273,6 +273,7 @@ app.post("/chat", async (c) => {
 
   const result = streamText({
     model: chatModel,
+    providerOptions: chatModelProviderOptions,
     system: buildSystemPrompt(),
     messages: convertToModelMessages(messages),
     stopWhen: stepCountIs(6),
