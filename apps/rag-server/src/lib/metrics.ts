@@ -119,3 +119,50 @@ export const ragLlmStepDuration = new Histogram({
   buckets: [0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30],
   registers: [registry],
 });
+
+/**
+ * TTFT of each individual step — the gap from the step's start boundary
+ * to the first chunk arriving from OpenAI for that step.
+ *
+ * For `step_index=0` this is the "pure" TTFT: from streamText() call to
+ * first chunk. For `step_index >= 1`, the step's start boundary is the
+ * moment the previous step finished, which includes any tool execution
+ * time (typically ~200ms for searchProfile) — subtract `tool_duration`
+ * from the same trace in logs if you need the pure model TTFT for step 1+.
+ *
+ * Critical for distinguishing queue latency from generation speed: if
+ * step_ttft is high but tokens_per_sec is normal, OpenAI is queuing the
+ * request. If step_ttft is low but tokens_per_sec is low, OpenAI is
+ * throttling the stream mid-flight.
+ */
+export const ragLlmStepTtft = new Histogram({
+  name: "rag_llm_step_ttft_seconds",
+  help: "Time from each step's start boundary to its first chunk from OpenAI. For step_index>=1, includes tool execution time that preceded the step.",
+  labelNames: ["step_index"] as const,
+  buckets: [0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30],
+  registers: [registry],
+});
+
+/**
+ * Effective output-token-generation rate per step.
+ *
+ * Computed as `output_tokens / (step_duration - step_ttft)` — i.e. the
+ * token rate DURING generation (excluding the TTFT portion). Labelled by
+ * step_index so we can tell if throttling is specific to certain turns.
+ *
+ * Reference points for gpt-4o-mini:
+ *   - ~25-30 tok/s = healthy baseline
+ *   - ~10-15 tok/s = borderline (peak-hour compression)
+ *   - <5 tok/s = actively throttled (OpenAI tier deprioritization)
+ *
+ * If Grafana shows P50 ~25 but P95 dipping to <5, we have confirmation
+ * that a subset of requests get throttled mid-stream — that's the class
+ * of problem a move to dedicated-inference (Groq) solves structurally.
+ */
+export const ragLlmStepTokensPerSec = new Histogram({
+  name: "rag_llm_step_tokens_per_second",
+  help: "Effective tokens-per-second generated during the streaming phase of each LLM step (excludes TTFT).",
+  labelNames: ["step_index"] as const,
+  buckets: [1, 2, 5, 10, 15, 20, 25, 30, 50, 100, 300, 600],
+  registers: [registry],
+});

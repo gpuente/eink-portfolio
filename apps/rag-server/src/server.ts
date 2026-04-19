@@ -20,6 +20,8 @@ import {
   llmTokensTotal,
   ragFirstTokenLatency,
   ragLlmStepDuration,
+  ragLlmStepTokensPerSec,
+  ragLlmStepTtft,
   ragRequestsTotal,
   ragStepDuration,
   registry,
@@ -237,11 +239,9 @@ app.post("/chat", async (c) => {
     totalTimer();
   };
 
-  // TTFT capture: onChunk fires for every chunk (text-delta, tool-call,
-  // etc.) — we only care about the first one. Gap from streamText() call
-  // to first chunk = the "Thinking…" duration the client perceives before
-  // any tool row or text bubble appears. If this dominates llm_ms, the
-  // bottleneck is OpenAI's queue / first-token scheduling, not generation.
+  // TTFT capture (stream-wide): onChunk fires for every chunk (text-delta,
+  // tool-call, etc.) — we record the FIRST one to get the "Thinking…" gap
+  // the client perceives before anything appears on screen.
   let ttftMs: number | null = null;
   const captureFirstChunk = () => {
     if (ttftMs !== null) return;
@@ -249,13 +249,21 @@ app.post("/chat", async (c) => {
     ragFirstTokenLatency.observe(ttftMs / 1000);
   };
 
-  // Per-step timing: onStepFinish fires after each model round-trip.
-  // Wall-clock from the previous step boundary gives us how long each
-  // turn took. Step 0 is the first LLM call (decide to call tool / or
-  // answer directly); step 1+ are subsequent turns (e.g. after tool
-  // result is injected). Log each so we can see where the time lives.
+  // Per-step timing. We split each model round-trip into two parts:
+  //   step_ttft_ms = time from step start to first chunk of THAT step
+  //   step_generation_ms = time from first chunk to step end
+  // For step 0, "step start" = streamText() call (stepStart = llmStart).
+  // For step >= 1, "step start" = previous onStepFinish time — which
+  // includes tool execution time that ran between steps. Subtract the
+  // matching `rag.tool` duration from the log if you need the pure model
+  // TTFT for step 1+.
+  //
+  // With both numbers, Grafana can distinguish queue latency (high ttft,
+  // normal generation rate) from mid-stream throttling (normal ttft, low
+  // generation rate) — the two dominant failure modes for gpt-4o-mini.
   let stepIndex = 0;
-  let prevStepEnd = llmStart;
+  let stepStart = llmStart;
+  let stepFirstChunkAt: number | null = null;
 
   logger.info("rag.pipeline.start", {
     trace_id: traceId,
@@ -426,17 +434,29 @@ app.post("/chat", async (c) => {
       }),
     },
     onChunk: () => {
-      // Fires for every content chunk from OpenAI. We only need the first
-      // to compute TTFT; the guard inside captureFirstChunk keeps this O(1).
+      // Fires for every content chunk from OpenAI. Records the first chunk
+      // timestamps for BOTH the stream-wide TTFT and the per-step TTFT.
       captureFirstChunk();
+      if (stepFirstChunkAt === null) stepFirstChunkAt = performance.now();
     },
     onStepFinish: (step) => {
       const now = performance.now();
-      const durationMs = Math.round(now - prevStepEnd);
+      const durationMs = Math.round(now - stepStart);
+      const stepTtftMs =
+        stepFirstChunkAt !== null
+          ? Math.round(stepFirstChunkAt - stepStart)
+          : null;
+      // Time spent actually streaming tokens (TTFT already paid for).
+      // If onChunk never fired for this step (shouldn't happen for a
+      // healthy stream, but defensive), fall back to durationMs.
+      const generationMs =
+        stepFirstChunkAt !== null ? Math.round(now - stepFirstChunkAt) : durationMs;
       const stepIdxStr = String(stepIndex);
-      prevStepEnd = now;
 
       ragLlmStepDuration.observe({ step_index: stepIdxStr }, durationMs / 1000);
+      if (stepTtftMs !== null) {
+        ragLlmStepTtft.observe({ step_index: stepIdxStr }, stepTtftMs / 1000);
+      }
 
       // AI SDK v5 surfaces per-step usage + finishReason + toolCalls.
       // `cachedInputTokens` is only populated when OpenAI's prompt cache
@@ -456,10 +476,25 @@ app.post("/chat", async (c) => {
         ? (step as { toolCalls: unknown[] }).toolCalls.length
         : 0;
 
+      // Effective token rate during the streaming phase. Excludes TTFT
+      // (which is separate noise) so this number is "how fast is OpenAI
+      // actually emitting tokens once they start". Healthy baseline for
+      // gpt-4o-mini is ~25-30 tok/s; under 10 tok/s suggests throttling.
+      const tokensPerSec =
+        outputTokens > 0 && generationMs > 0
+          ? Math.round((outputTokens / generationMs) * 1000)
+          : null;
+      if (tokensPerSec !== null) {
+        ragLlmStepTokensPerSec.observe({ step_index: stepIdxStr }, tokensPerSec);
+      }
+
       logger.info("rag.llm.step", {
         trace_id: traceId,
         step_index: stepIndex,
         duration_ms: durationMs,
+        step_ttft_ms: stepTtftMs,
+        step_generation_ms: generationMs,
+        tokens_per_sec: tokensPerSec,
         finish_reason: (step as { finishReason?: string }).finishReason,
         input_tokens: inputTokens,
         output_tokens: outputTokens,
@@ -467,7 +502,13 @@ app.post("/chat", async (c) => {
         tool_calls: toolCalls,
       });
 
+      // Reset step-window state. Next step's start boundary is NOW; tool
+      // execution (if any) runs before the next LLM call, so that delay
+      // will land inside the next step's step_ttft_ms — subtract the
+      // matching rag.tool duration to get the pure model TTFT.
       stepIndex++;
+      stepStart = now;
+      stepFirstChunkAt = null;
     },
     onFinish: ({ usage, finishReason, steps }) => {
       stopTimers();
