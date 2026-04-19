@@ -511,7 +511,14 @@ app.post("/chat", async (c) => {
       stepStart = now;
       stepFirstChunkAt = null;
     },
-    onFinish: ({ usage, finishReason, steps }) => {
+    onFinish: ({ usage, finishReason, steps, providerMetadata }) => {
+      // TEMP diagnostic: log the Gateway's routing metadata so we can
+      // confirm which upstream provider actually served the request.
+      // Removes after we've validated that order: ["groq"] is working.
+      logger.info("llm.routing", {
+        trace_id: traceId,
+        provider_metadata: providerMetadata,
+      });
       stopTimers();
       // `usage` in AI SDK v5 reports aggregate tokens across every step
       // (initial tool-call decision + final answer generation) — which is

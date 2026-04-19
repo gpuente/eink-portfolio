@@ -18,7 +18,7 @@ import { openai } from "@ai-sdk/openai";
  *     a `reasoning` tag — watch for thinking-mode overhead)
  *   - `moonshotai/kimi-k2` (good tool-use, 131k context)
  */
-export const chatModel = "moonshotai/kimi-k2" as const;
+export const chatModel = "openai/gpt-oss-120b" as const;
 
 export const chatModelProviderOptions = {
   gateway: {
