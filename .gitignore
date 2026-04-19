@@ -34,3 +34,7 @@ pnpm-debug.log*
 # (full CV, LinkedIn export, etc.) and shouldn't be tracked.
 apps/rag-server/sources/*
 !apps/rag-server/sources/.gitkeep
+
+# bench runs (one JSON per invocation, partitioned by base_url). Useful
+# locally for comparing runs; not worth checking in.
+apps/rag-server/bench-results/

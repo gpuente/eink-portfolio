@@ -15,10 +15,22 @@ export type RateLimitResult = {
  * Simple in-memory IP rate limiter. Resets per IP every rolling hour.
  * Resets when the server restarts (acceptable for v1 — for production behind
  * a load balancer, swap to Redis or upstash).
+ *
+ * Setting `RATE_LIMIT_PER_HOUR=0` disables the limiter entirely — useful
+ * locally where you're benchmarking against your own machine. In prod
+ * pick a value generous enough that legitimate bursts don't hit (e.g. 120).
  */
 export function checkRateLimit(ip: string): RateLimitResult {
-  const now = Date.now();
   const limit = env.RATE_LIMIT_PER_HOUR;
+
+  // 0 = disabled. Return sentinel values so the headers still render
+  // something sensible (remaining=Infinity isn't a valid number for
+  // a header, so expose a large integer instead).
+  if (limit <= 0) {
+    return { allowed: true, remaining: 999_999, resetAt: Date.now() + HOUR_MS };
+  }
+
+  const now = Date.now();
   const existing = buckets.get(ip);
 
   if (!existing || now >= existing.resetAt) {

@@ -225,7 +225,41 @@ app.post("/chat", async (c) => {
   // ── Observability: one traceId per RAG pipeline run, threaded through
   // every sub-step (tools, logs, metrics). Grafana + VictoriaLogs can then
   // reconstruct the whole request by filtering on `{trace_id="…"}`.
+  // Also expose it as a response header so the bench script can correlate
+  // client-side timings with server-side logs without extra machinery.
   const traceId = randomUUID();
+  c.header("X-Trace-Id", traceId);
+
+  // ── Optional model override (for bench testing A/B between providers).
+  // The bench script sends X-LLM-Model with a Gateway slug; we only honor
+  // it if it's in this explicit allowlist — this prevents a stranger from
+  // making us burn on an expensive model they found via the open /chat.
+  // Allowlist covers the models we'd actually consider switching to.
+  const MODEL_ALLOWLIST = new Set([
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b",
+    "alibaba/qwen-3-32b",
+    "meta/llama-3.3-70b",
+    "meta/llama-3.1-8b",
+    "meta/llama-4-scout",
+    "moonshotai/kimi-k2",
+  ]);
+  const overrideModel = c.req.header("x-llm-model");
+  const activeChatModel =
+    overrideModel && MODEL_ALLOWLIST.has(overrideModel) ? overrideModel : chatModel;
+  if (overrideModel && overrideModel !== activeChatModel) {
+    logger.warn("llm.override.ignored", {
+      trace_id: traceId,
+      requested: overrideModel,
+      reason: "not in allowlist",
+    });
+  } else if (overrideModel) {
+    logger.info("llm.override.applied", {
+      trace_id: traceId,
+      model: overrideModel,
+    });
+  }
+
   const requestStart = performance.now();
   const totalTimer = ragStepDuration.startTimer({ step: "total" });
   const llmTimer = ragStepDuration.startTimer({ step: "llm_generate" });
@@ -273,7 +307,7 @@ app.post("/chat", async (c) => {
   });
 
   const result = streamText({
-    model: chatModel,
+    model: activeChatModel,
     providerOptions: chatModelProviderOptions,
     system: buildSystemPrompt(),
     messages: convertToModelMessages(messages),

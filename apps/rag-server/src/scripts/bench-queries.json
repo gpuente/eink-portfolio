@@ -1,0 +1,124 @@
+{
+  "_comment": "Fixture for the bench script. Each entry is a realistic query the chat agent should handle. `expected_tool` is asserted against the tool the agent actually invoked (null = no tool expected; the agent should answer directly or refuse).",
+  "queries": [
+    {
+      "id": "factual-powerhouse",
+      "text": "¿Qué es Powerhouse?",
+      "category": "factual",
+      "expected_tool": "searchProfile",
+      "language": "es"
+    },
+    {
+      "id": "factual-ai-work",
+      "text": "What AI work has Guillermo done?",
+      "category": "factual",
+      "expected_tool": "searchProfile",
+      "language": "en"
+    },
+    {
+      "id": "factual-evernote",
+      "text": "¿Qué hizo en Evernote?",
+      "category": "factual",
+      "expected_tool": "searchProfile",
+      "language": "es"
+    },
+    {
+      "id": "factual-makerdao",
+      "text": "What does he do at MakerDAO?",
+      "category": "factual",
+      "expected_tool": "searchProfile",
+      "language": "en"
+    },
+    {
+      "id": "factual-talks",
+      "text": "¿En qué conferencias ha hablado?",
+      "category": "factual",
+      "expected_tool": "searchProfile",
+      "language": "es"
+    },
+    {
+      "id": "factual-stack",
+      "text": "What's his main tech stack?",
+      "category": "factual",
+      "expected_tool": "searchProfile",
+      "language": "en"
+    },
+    {
+      "id": "scheduling-next-week",
+      "text": "¿Cuándo tiene disponibilidad la próxima semana?",
+      "category": "scheduling",
+      "expected_tool": "checkAvailability",
+      "language": "es"
+    },
+    {
+      "id": "scheduling-friday",
+      "text": "Is he free on Friday afternoon?",
+      "category": "scheduling",
+      "expected_tool": "checkAvailability",
+      "language": "en"
+    },
+    {
+      "id": "cv-es",
+      "text": "dame su CV",
+      "category": "cv",
+      "expected_tool": null,
+      "language": "es"
+    },
+    {
+      "id": "cv-en",
+      "text": "can I get his resume?",
+      "category": "cv",
+      "expected_tool": null,
+      "language": "en"
+    },
+    {
+      "id": "github-recent",
+      "text": "What has he been pushing to GitHub lately?",
+      "category": "github",
+      "expected_tool": "getGithubActivity",
+      "language": "en"
+    },
+    {
+      "id": "github-top-repos",
+      "text": "¿Cuáles son sus repos más populares en GitHub?",
+      "category": "github",
+      "expected_tool": "getGithubActivity",
+      "language": "es"
+    },
+    {
+      "id": "greeting-es",
+      "text": "hola",
+      "category": "greeting",
+      "expected_tool": null,
+      "language": "es"
+    },
+    {
+      "id": "greeting-en",
+      "text": "hey there",
+      "category": "greeting",
+      "expected_tool": null,
+      "language": "en"
+    },
+    {
+      "id": "refusal-weather",
+      "text": "what's the weather in Paris today?",
+      "category": "refusal",
+      "expected_tool": null,
+      "language": "en"
+    },
+    {
+      "id": "refusal-math",
+      "text": "cuánto es 15 por 23?",
+      "category": "refusal",
+      "expected_tool": null,
+      "language": "es"
+    },
+    {
+      "id": "refusal-opinion",
+      "text": "who's the best president in history?",
+      "category": "refusal",
+      "expected_tool": null,
+      "language": "en"
+    }
+  ]
+}

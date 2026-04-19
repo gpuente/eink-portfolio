@@ -39,8 +39,11 @@ function safeStringify(obj: unknown): string {
 
 function emit(level: "info" | "warn" | "error", event: string, fields: Fields): void {
   const line = safeStringify({ level, event, ts: Date.now(), ...fields });
-  if (level === "error") console.error(line);
-  else console.log(line);
+  // Emit everything (including errors) to stdout. Fly / VictoriaLogs treats
+  // both streams the same, and keeping a single stream lets local bench
+  // correlation work with just `server > /tmp/rag-server.log` without
+  // worrying about stderr redirection order.
+  console.log(line);
 }
 
 export const logger = {

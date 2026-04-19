@@ -11,7 +11,10 @@
     "start": "tsx --env-file=.env src/server.ts",
     "check": "tsc --noEmit",
     "ingest": "tsx --env-file=.env src/scripts/ingest.ts",
-    "ingest:reset": "tsx --env-file=.env src/scripts/ingest.ts --reset"
+    "ingest:reset": "tsx --env-file=.env src/scripts/ingest.ts --reset",
+    "bench": "tsx --env-file=.env src/scripts/bench.ts",
+    "bench:local": "tsx --env-file=.env src/scripts/bench.ts --target local",
+    "bench:prod": "tsx --env-file=.env src/scripts/bench.ts --target prod"
   },
   "dependencies": {
     "@ai-sdk/gateway": "^3.0.104",

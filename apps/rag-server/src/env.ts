@@ -12,7 +12,9 @@ const EnvSchema = z.object({
   CORS_ORIGIN: z.string().default("http://localhost:4321"),
 
   // Guardrails — all optional, sensible defaults
-  RATE_LIMIT_PER_HOUR: z.coerce.number().int().positive().default(30),
+  // 0 disables the per-IP limiter (use in local dev + benchmark runs).
+  // Any positive integer is the per-IP per-rolling-hour cap.
+  RATE_LIMIT_PER_HOUR: z.coerce.number().int().nonnegative().default(30),
   MAX_HISTORY_MESSAGES: z.coerce.number().int().positive().default(10),
   MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().default(500),
   RETRIEVAL_SIMILARITY_FLOOR: z.coerce.number().min(0).max(1).default(0.4),
