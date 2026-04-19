@@ -103,8 +103,15 @@ type BenchReport = {
   rounds: number;
   warmup: number;
   total_requests: number;
-  successful: number;
-  errors: number;
+  successful: number; // HTTP-level success (response stream completed cleanly)
+  errors: number; // HTTP-level failures
+  pipeline_successes: number; // server-side pipeline.end with status="success"
+  pipeline_errors: number; // server-side pipeline.end with status="error"
+  // Health flag used to gate comparisons: reports that failed any
+  // threshold (HTTP success, pipeline success, tool match rate) are not
+  // used as baselines — otherwise a run against a broken provider would
+  // make the NEXT healthy run look like a "regression".
+  health: { healthy: boolean; reasons: string[] };
   duration_ms: number; // wall-clock duration of the bench itself
   client: {
     ttfb_ms: Stats;
@@ -165,6 +172,7 @@ pnpm rag bench — portfolio RAG server performance benchmark
   --no-correlate                     skip server-side log correlation (client-only report)
   --no-save                          don't write the run to bench-results/
   --no-compare                       skip comparison with previous run
+  --compare-any                      compare even against prior runs flagged as degraded
   --format markdown|json|csv|all     output format (default: markdown; JSON saved always if --save)
   -h, --help                         show this help
 `.trim();
@@ -183,6 +191,7 @@ const args = parseArgs({
     "no-correlate": { type: "boolean", default: false },
     "no-save": { type: "boolean", default: false },
     "no-compare": { type: "boolean", default: false },
+    "compare-any": { type: "boolean", default: false },
     format: { type: "string", default: "markdown" },
     help: { type: "boolean", short: "h", default: false },
   },
@@ -219,6 +228,7 @@ const LOG_FILE = args["log-file"] ?? DEFAULT_LOG_FILE;
 const CORRELATE = !args["no-correlate"];
 const SAVE = !args["no-save"];
 const COMPARE = !args["no-compare"];
+const COMPARE_ANY = !!args["compare-any"];
 const FORMAT = String(args.format ?? "markdown").toLowerCase() as
   | "markdown"
   | "json"
@@ -536,6 +546,76 @@ function correlate(
 
 type FixtureFile = { queries: QueryFixture[] };
 
+/**
+ * Thresholds for marking a bench run as "healthy". A degraded run isn't
+ * used as a baseline for future comparisons — otherwise the first clean
+ * run after an incident (provider outage, rate-limit, tool-routing
+ * regression) shows up as a "regression" when really the prior baseline
+ * was broken.
+ *
+ * Numbers are conservative on purpose. If the stack is close to any of
+ * these thresholds, it's probably not a trustworthy baseline either.
+ */
+const HEALTH_MIN_HTTP_SUCCESS_RATE = 0.95;
+const HEALTH_MAX_PIPELINE_ERROR_RATE = 0.05;
+const HEALTH_MIN_TOOL_MATCH_RATE = 0.9;
+
+function assessHealth(input: {
+  total_requests: number;
+  successful: number;
+  pipeline_successes: number;
+  pipeline_errors: number;
+  tool_matched: number;
+  tool_expected: number;
+}): { healthy: boolean; reasons: string[] } {
+  const reasons: string[] = [];
+  if (input.total_requests === 0) {
+    reasons.push("no requests completed");
+    return { healthy: false, reasons };
+  }
+  const httpSuccessRate = input.successful / input.total_requests;
+  if (httpSuccessRate < HEALTH_MIN_HTTP_SUCCESS_RATE) {
+    reasons.push(
+      `HTTP success ${Math.round(httpSuccessRate * 100)}% < ${Math.round(HEALTH_MIN_HTTP_SUCCESS_RATE * 100)}%`,
+    );
+  }
+  const pipelineTotal = input.pipeline_successes + input.pipeline_errors;
+  if (pipelineTotal > 0) {
+    const pipelineErrorRate = input.pipeline_errors / pipelineTotal;
+    if (pipelineErrorRate > HEALTH_MAX_PIPELINE_ERROR_RATE) {
+      reasons.push(
+        `pipeline errors ${Math.round(pipelineErrorRate * 100)}% > ${Math.round(HEALTH_MAX_PIPELINE_ERROR_RATE * 100)}%`,
+      );
+    }
+  }
+  if (input.tool_expected > 0) {
+    const matchRate = input.tool_matched / input.tool_expected;
+    if (matchRate < HEALTH_MIN_TOOL_MATCH_RATE) {
+      reasons.push(
+        `tool match ${Math.round(matchRate * 100)}% < ${Math.round(HEALTH_MIN_TOOL_MATCH_RATE * 100)}%`,
+      );
+    }
+  }
+  return { healthy: reasons.length === 0, reasons };
+}
+
+/**
+ * Back-compat: older saved reports may not have the `health` or the
+ * pipeline_* fields. Compute health on-the-fly from whatever fields are
+ * present so we can still tell whether they're usable as a baseline.
+ */
+function healthOf(r: Partial<BenchReport>): { healthy: boolean; reasons: string[] } {
+  if (r.health) return r.health;
+  return assessHealth({
+    total_requests: r.total_requests ?? 0,
+    successful: r.successful ?? 0,
+    pipeline_successes: r.pipeline_successes ?? r.successful ?? 0,
+    pipeline_errors: r.pipeline_errors ?? 0,
+    tool_matched: r.tool_routing?.matched ?? 0,
+    tool_expected: r.tool_routing?.expected ?? 0,
+  });
+}
+
 function buildReport(
   fixture: QueryFixture[],
   results: RequestResult[],
@@ -561,10 +641,14 @@ function buildReport(
 
   const providerDist: Record<string, number> = {};
   let cacheHits = 0;
+  let pipelineSuccesses = 0;
+  let pipelineErrors = 0;
   for (const r of withServer) {
     const p = r.server?.final_provider ?? "unknown";
     providerDist[p] = (providerDist[p] ?? 0) + 1;
     if ((r.server?.cached_input_tokens ?? 0) > 0) cacheHits++;
+    if (r.server?.pipeline_status === "success") pipelineSuccesses++;
+    else if (r.server?.pipeline_status === "error") pipelineErrors++;
   }
 
   // Tool-routing accuracy: for each run we know the expected_tool from the
@@ -642,6 +726,15 @@ function buildReport(
     budgetReasons.push(`total_ms P95 ${totalStats.p95}ms > ${MAX_P95}ms`);
   }
 
+  const health = assessHealth({
+    total_requests: results.length,
+    successful: successful.length,
+    pipeline_successes: pipelineSuccesses,
+    pipeline_errors: pipelineErrors,
+    tool_matched: toolMatchedCount,
+    tool_expected: toolExpectedCount,
+  });
+
   return {
     run_id: randomUUID(),
     timestamp: new Date().toISOString(),
@@ -655,6 +748,9 @@ function buildReport(
     total_requests: results.length,
     successful: successful.length,
     errors: results.length - successful.length,
+    pipeline_successes: pipelineSuccesses,
+    pipeline_errors: pipelineErrors,
+    health,
     duration_ms: benchDurationMs,
     client: {
       ttfb_ms: stats(clientTtfb),
@@ -704,7 +800,11 @@ function fmtBytes(b: number): string {
   return `${b} B`;
 }
 
-function renderMarkdown(r: BenchReport, compare: BenchReport | null): string {
+function renderMarkdown(
+  r: BenchReport,
+  compare: BenchReport | null,
+  compareSkipped: number,
+): string {
   const lines: string[] = [];
   lines.push("");
   lines.push("═══════════════════════════════════════════════════════════════");
@@ -718,10 +818,16 @@ function renderMarkdown(r: BenchReport, compare: BenchReport | null): string {
   );
   lines.push(` Concurrency:    ${r.concurrency}`);
   lines.push(
-    ` Total reqs:     ${r.total_requests}  (✓ ${r.successful}  ✗ ${r.errors})`,
+    ` Total reqs:     ${r.total_requests}  (HTTP ✓ ${r.successful} ✗ ${r.errors}  ·  pipeline ✓ ${r.pipeline_successes} ✗ ${r.pipeline_errors})`,
   );
   lines.push(` Wall time:      ${fmtMs(r.duration_ms)}`);
   lines.push(` Model override: ${r.model_override ?? "(default)"}`);
+  if (r.health.healthy) {
+    lines.push(" Health:         ✓ healthy (usable as baseline for future compares)");
+  } else {
+    lines.push(` Health:         ✗ degraded — ${r.health.reasons.join("; ")}`);
+    lines.push("                 (this run will NOT be used as a baseline)");
+  }
   lines.push("");
 
   lines.push("─── Client-side ──────────────────────────────────────────────");
@@ -818,9 +924,31 @@ function renderMarkdown(r: BenchReport, compare: BenchReport | null): string {
     lines.push("");
   }
 
+  // Per-query breakdown. Useful to eyeball which specific question is
+  // slow vs fast and catch outliers. Sorted by mean_total_ms desc so
+  // the worst offenders surface first.
+  if (r.per_query.length > 0) {
+    lines.push("─── Per-query (mean across rounds) ───────────────────────────");
+    lines.push(" query                              mean total  mean toks  runs");
+    const sorted = [...r.per_query].sort((a, b) => b.mean_total_ms - a.mean_total_ms);
+    for (const q of sorted) {
+      const name = q.query_id.length > 34 ? q.query_id.slice(0, 32) + "…" : q.query_id;
+      const tok = q.mean_output_tokens !== null ? String(q.mean_output_tokens) : "—";
+      lines.push(
+        ` ${name.padEnd(35)} ${fmtMs(q.mean_total_ms).padStart(9)}  ${tok.padStart(8)}    ${String(q.runs.length).padStart(3)}`,
+      );
+    }
+    lines.push("");
+  }
+
   // Comparison.
   if (compare) {
     lines.push("─── Comparison with last run ─────────────────────────────────");
+    if (compareSkipped > 0) {
+      lines.push(
+        ` Skipped ${compareSkipped} more recent degraded run(s) — baseline is older.`,
+      );
+    }
     lines.push(` Previous: ${compare.timestamp}  (same base_url)`);
     lines.push("");
     lines.push(comparisonLine("Total p50", compare.client.total_ms.p50, r.client.total_ms.p50, "ms"));
@@ -942,22 +1070,39 @@ function renderCsv(r: BenchReport): string {
 // Persistence
 // ──────────────────────────────────────────────────────────────
 
-async function findLastReport(baseUrlKey: string): Promise<BenchReport | null> {
+/**
+ * Walk previously saved runs (newest first) for the same base_url and
+ * return the first one that's still usable as a baseline — that means
+ * either healthy, or acceptable under --compare-any. Also reports how
+ * many degraded runs were skipped so the markdown output can explain.
+ */
+async function findBaselineReport(
+  baseUrlKey: string,
+  allowDegraded: boolean,
+): Promise<{ report: BenchReport | null; skipped: number }> {
   const dir = join(RESULTS_DIR, baseUrlKey);
   let entries: string[] = [];
   try {
     entries = await readdir(dir);
   } catch {
-    return null;
+    return { report: null, skipped: 0 };
   }
   const jsonFiles = entries.filter((e) => e.endsWith(".json")).sort().reverse();
-  if (jsonFiles.length === 0) return null;
-  try {
-    const content = await readFile(join(dir, jsonFiles[0]!), "utf-8");
-    return JSON.parse(content) as BenchReport;
-  } catch {
-    return null;
+  let skipped = 0;
+  for (const file of jsonFiles) {
+    try {
+      const content = await readFile(join(dir, file), "utf-8");
+      const report = JSON.parse(content) as BenchReport;
+      if (allowDegraded || healthOf(report).healthy) {
+        return { report, skipped };
+      }
+      skipped++;
+    } catch {
+      // Corrupt JSON — skip and move on.
+      skipped++;
+    }
   }
+  return { report: null, skipped };
 }
 
 async function saveReport(r: BenchReport): Promise<string> {
@@ -1032,8 +1177,15 @@ async function main(): Promise<void> {
   const report = buildReport(fixture, results, benchDuration);
 
   // Comparison (before save so the comparison file is the PREVIOUS one).
+  // By default skip degraded prior runs — otherwise a fresh healthy run
+  // would be compared against a broken baseline and look like a regression.
   let prev: BenchReport | null = null;
-  if (COMPARE) prev = await findLastReport(BASE_URL_KEY);
+  let prevSkipped = 0;
+  if (COMPARE) {
+    const found = await findBaselineReport(BASE_URL_KEY, COMPARE_ANY);
+    prev = found.report;
+    prevSkipped = found.skipped;
+  }
 
   // Save.
   if (SAVE) {
@@ -1043,7 +1195,15 @@ async function main(): Promise<void> {
 
   // Output.
   if (FORMAT === "markdown" || FORMAT === "all") {
-    process.stdout.write(renderMarkdown(report, prev));
+    process.stdout.write(renderMarkdown(report, prev, prevSkipped));
+  }
+  // Message when we tried to find a baseline but only had degraded runs.
+  if (FORMAT === "markdown" && COMPARE && !prev && prevSkipped > 0) {
+    process.stdout.write(
+      `\n─── Comparison ──────────────────────────────────────────────\n` +
+        ` No healthy baseline — skipped ${prevSkipped} degraded prior run(s).\n` +
+        ` (use --compare-any to compare against them anyway)\n\n`,
+    );
   }
   if (FORMAT === "json" || FORMAT === "all") {
     process.stdout.write(JSON.stringify(report, null, 2) + "\n");
