@@ -53,5 +53,10 @@ primary_region = "iad"
     path = "/health"
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
+  # Streaming from the Gateway back to the client is CPU-intensive on the
+  # Node side (SSE parsing + AI SDK state machine + prom-client metrics +
+  # structured logging per chunk). On shared-cpu-1x / 256MB this backpressures
+  # Groq into throttling, inflating P50 to ~9s and P95 beyond 30s. shared-cpu-2x
+  # doubles the vCPU share and RAM for +$2/mo and is enough for this workload.
+  size = "shared-cpu-2x"
+  memory = "512mb"
