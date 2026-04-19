@@ -18,6 +18,8 @@ import { getGithubInfo } from "./lib/github.ts";
 import { logger } from "./lib/logger.ts";
 import {
   llmTokensTotal,
+  ragFirstTokenLatency,
+  ragLlmStepDuration,
   ragRequestsTotal,
   ragStepDuration,
   registry,
@@ -235,6 +237,26 @@ app.post("/chat", async (c) => {
     totalTimer();
   };
 
+  // TTFT capture: onChunk fires for every chunk (text-delta, tool-call,
+  // etc.) — we only care about the first one. Gap from streamText() call
+  // to first chunk = the "Thinking…" duration the client perceives before
+  // any tool row or text bubble appears. If this dominates llm_ms, the
+  // bottleneck is OpenAI's queue / first-token scheduling, not generation.
+  let ttftMs: number | null = null;
+  const captureFirstChunk = () => {
+    if (ttftMs !== null) return;
+    ttftMs = Math.round(performance.now() - llmStart);
+    ragFirstTokenLatency.observe(ttftMs / 1000);
+  };
+
+  // Per-step timing: onStepFinish fires after each model round-trip.
+  // Wall-clock from the previous step boundary gives us how long each
+  // turn took. Step 0 is the first LLM call (decide to call tool / or
+  // answer directly); step 1+ are subsequent turns (e.g. after tool
+  // result is injected). Log each so we can see where the time lives.
+  let stepIndex = 0;
+  let prevStepEnd = llmStart;
+
   logger.info("rag.pipeline.start", {
     trace_id: traceId,
     query: lastUserQuery(messages),
@@ -403,6 +425,50 @@ app.post("/chat", async (c) => {
           }),
       }),
     },
+    onChunk: () => {
+      // Fires for every content chunk from OpenAI. We only need the first
+      // to compute TTFT; the guard inside captureFirstChunk keeps this O(1).
+      captureFirstChunk();
+    },
+    onStepFinish: (step) => {
+      const now = performance.now();
+      const durationMs = Math.round(now - prevStepEnd);
+      const stepIdxStr = String(stepIndex);
+      prevStepEnd = now;
+
+      ragLlmStepDuration.observe({ step_index: stepIdxStr }, durationMs / 1000);
+
+      // AI SDK v5 surfaces per-step usage + finishReason + toolCalls.
+      // `cachedInputTokens` is only populated when OpenAI's prompt cache
+      // hit — 0/undefined means the prefix wasn't stable enough to cache.
+      const stepUsage = (step as { usage?: Record<string, unknown> }).usage ?? {};
+      const inputTokens =
+        typeof stepUsage.inputTokens === "number" ? stepUsage.inputTokens : 0;
+      const outputTokens =
+        typeof stepUsage.outputTokens === "number" ? stepUsage.outputTokens : 0;
+      const cachedInputTokens =
+        typeof stepUsage.cachedInputTokens === "number"
+          ? stepUsage.cachedInputTokens
+          : undefined;
+      const toolCalls = Array.isArray(
+        (step as { toolCalls?: unknown[] }).toolCalls,
+      )
+        ? (step as { toolCalls: unknown[] }).toolCalls.length
+        : 0;
+
+      logger.info("rag.llm.step", {
+        trace_id: traceId,
+        step_index: stepIndex,
+        duration_ms: durationMs,
+        finish_reason: (step as { finishReason?: string }).finishReason,
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        cached_input_tokens: cachedInputTokens,
+        tool_calls: toolCalls,
+      });
+
+      stepIndex++;
+    },
     onFinish: ({ usage, finishReason, steps }) => {
       stopTimers();
       // `usage` in AI SDK v5 reports aggregate tokens across every step
@@ -412,9 +478,18 @@ app.post("/chat", async (c) => {
         typeof usage?.inputTokens === "number" ? usage.inputTokens : 0;
       const outputTokens =
         typeof usage?.outputTokens === "number" ? usage.outputTokens : 0;
+      // cachedInputTokens is the count of input tokens that hit OpenAI's
+      // automatic prompt cache. If consistently 0, our prefix isn't stable
+      // and the cache fix isn't actually helping — worth investigating.
+      const cachedInputTokens =
+        typeof (usage as { cachedInputTokens?: number } | undefined)
+          ?.cachedInputTokens === "number"
+          ? (usage as { cachedInputTokens: number }).cachedInputTokens
+          : undefined;
       if (inputTokens > 0) llmTokensTotal.inc({ type: "input" }, inputTokens);
       if (outputTokens > 0) llmTokensTotal.inc({ type: "output" }, outputTokens);
       ragRequestsTotal.inc({ status: "success" });
+      const llmMs = Math.round(performance.now() - llmStart);
       logger.info("rag.pipeline.end", {
         trace_id: traceId,
         status: "success",
@@ -423,10 +498,15 @@ app.post("/chat", async (c) => {
         // 2 = tool-call + answer, 3+ = chained tool calls). Useful for
         // spotting pathological multi-step ping-pong in Grafana.
         steps: Array.isArray(steps) ? steps.length : undefined,
-        llm_ms: Math.round(performance.now() - llmStart),
+        // TTFT: from streamText() call to first chunk received. Compare
+        // against llm_ms to see if the bottleneck is queue (ttft_ms dominates)
+        // or generation (ttft_ms is small, rest is token streaming).
+        ttft_ms: ttftMs,
+        llm_ms: llmMs,
         total_ms: Math.round(performance.now() - requestStart),
         input_tokens: inputTokens,
         output_tokens: outputTokens,
+        cached_input_tokens: cachedInputTokens,
       });
     },
     onError: ({ error }) => {
@@ -436,6 +516,7 @@ app.post("/chat", async (c) => {
         trace_id: traceId,
         status: "error",
         error: error instanceof Error ? error.message : String(error),
+        ttft_ms: ttftMs,
         llm_ms: Math.round(performance.now() - llmStart),
         total_ms: Math.round(performance.now() - requestStart),
       });

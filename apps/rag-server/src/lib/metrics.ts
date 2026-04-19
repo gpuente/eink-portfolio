@@ -79,3 +79,43 @@ export const toolDuration = new Histogram({
   buckets: [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10],
   registers: [registry],
 });
+
+/**
+ * Time-to-first-token for the /chat stream — specifically, the gap between
+ * calling streamText() and receiving the first content chunk from OpenAI.
+ * This is the metric the CLIENT perceives as the "Thinking…" duration: the
+ * user waits here until the first tool row or text bubble appears.
+ *
+ * If this dominates total latency (>80% of llm_ms), the bottleneck is
+ * OpenAI's queue / first-token scheduling, NOT our code or the model's
+ * generation speed. Migrating to a dedicated-inference provider (Groq,
+ * Cerebras) removes that queue entirely.
+ *
+ * Buckets span 100ms–30s so we can see the whole distribution from
+ * cache-warm fast cases to pathological outliers.
+ */
+export const ragFirstTokenLatency = new Histogram({
+  name: "rag_first_token_seconds",
+  help: "Time from streamText start to the first chunk from OpenAI — the client-perceived 'Thinking' gap before any tool-call or text appears.",
+  buckets: [0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30],
+  registers: [registry],
+});
+
+/**
+ * Duration of each individual LLM round-trip within a single /chat call.
+ * With `stopWhen: stepCountIs(6)` we can have up to 6 model turns per
+ * request (tool-call → answer is 2 turns; chained tool-calls push it
+ * higher). Labelling by `step_index` ("0", "1", …) lets Grafana split
+ * the turns — often the first turn (tool-call decision) is much slower
+ * than subsequent turns because of queue + cache-cold effects.
+ *
+ * Cardinality is bounded by the stepCountIs cap (≤6), so the label is
+ * safe.
+ */
+export const ragLlmStepDuration = new Histogram({
+  name: "rag_llm_step_seconds",
+  help: "Duration of each model round-trip inside a streamText call, labelled by step_index (0 = first turn).",
+  labelNames: ["step_index"] as const,
+  buckets: [0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30],
+  registers: [registry],
+});
