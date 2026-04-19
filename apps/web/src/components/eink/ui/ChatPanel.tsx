@@ -40,14 +40,15 @@ function loadStoredMessages(): UIMessage[] {
 }
 
 /**
- * OpenAI's gpt-oss-* models emit retrieval-source citation markers in the
- * shape `【<index>†<type>†<source>】` (e.g. `【0†text†cv.md】`). Clients like
- * ChatGPT render these as interactive footnotes; our plain markdown
- * renderer shows them literally, which looks like garbage. Strip them
- * before handing text to <Markdown>. The pattern is anchored on the
- * full-width brackets so it never collides with normal prose.
+ * OpenAI's gpt-oss-* models emit retrieval-source citation markers in a
+ * few shapes: `【0†text†cv.md】`, `【0†cv.md】`, or just `【cv.md】`. Clients
+ * like ChatGPT render these as interactive footnotes; our plain markdown
+ * renderer shows them literally, which looks like garbage. The bracket
+ * characters 【 】 (U+3010/U+3011) are never used in normal EN/ES prose,
+ * so it's safe to strip any content between them — this future-proofs
+ * us against format variations the model may emit.
  */
-const CITATION_MARKER_RE = /【[^】]*†[^】]*】/g;
+const CITATION_MARKER_RE = /【[^】]+】/g;
 
 /** Concatenate text parts of a UIMessage; ignore tool-call / tool-result parts. */
 function messageText(m: UIMessage): string {
