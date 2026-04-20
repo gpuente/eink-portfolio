@@ -33,26 +33,26 @@ export const EXPERIENCE: Experience[] = [
     place_en: "Remote · Global",
     place_es: "Remoto · Global",
     detail_en:
-      "Shipped Evernote's first AI feature — AI Note Cleanup — owning both the server-side OpenAI orchestration and the in-editor UX (launched mid-2023 as a 20% public beta before company-wide GA). Owned end-to-end delivery across Node.js / gRPC microservices on the client-service contact layer and the Electron desktop (Windows / macOS / Linux), iOS, Android, and Web clients that consume them — feature parity across 6 platforms. Delivered and maintained Tasks, a core productivity module used daily by millions. Mentored 6–8 engineers across 2 internship cohorts. Stack: React, Redux, TypeScript, Node.js, GraphQL, gRPC, OpenAI, Electron, Docker, Kubernetes.",
+      "Shipped Evernote's first AI feature — AI Note Cleanup — owning both the server-side OpenAI orchestration and the in-editor UX (launched mid-2023 as a 20% public beta before company-wide GA). Owned end-to-end delivery across Node.js / gRPC microservices on the client-service contact layer and the Electron desktop (Windows / macOS / Linux), iOS, Android, and Web clients that consume them — feature parity across 6 platforms. Delivered and maintained Tasks, a core productivity module used daily by millions. Mentored 6–8 engineers across 2 internship cohorts. Stack: React, Redux, TypeScript, Node.js, GraphQL, gRPC, OpenAI, Electron, Docker, Kubernetes, Circle CI.",
     detail_es:
-      "Envié la primera feature con IA de Evernote — AI Note Cleanup — dueño tanto de la orquestación server-side con OpenAI como del UX dentro del editor (lanzada a mitad de 2023 como public beta al 20% antes del GA a toda la compañía). A cargo de la entrega end-to-end de microservicios Node.js / gRPC en la capa de contacto cliente-servicio y de los clientes Electron desktop (Windows / macOS / Linux), iOS, Android y Web que los consumen — paridad de features en 6 plataformas. Envié y mantuve Tasks, un módulo central de productividad usado a diario por millones. Mentor de 6–8 ingenieros en 2 cohortes de internship. Stack: React, Redux, TypeScript, Node.js, GraphQL, gRPC, OpenAI, Electron, Docker, Kubernetes.",
+      "Envié la primera feature con IA de Evernote — AI Note Cleanup — dueño tanto de la orquestación server-side con OpenAI como del UX dentro del editor (lanzada a mitad de 2023 como public beta al 20% antes del GA a toda la compañía). A cargo de la entrega end-to-end de microservicios Node.js / gRPC en la capa de contacto cliente-servicio y de los clientes Electron desktop (Windows / macOS / Linux), iOS, Android y Web que los consumen — paridad de features en 6 plataformas. Envié y mantuve Tasks, un módulo central de productividad usado a diario por millones. Mentor de 6–8 ingenieros en 2 cohortes de internship. Stack: React, Redux, TypeScript, Node.js, GraphQL, gRPC, OpenAI, Electron, Docker, Kubernetes, Circle CI.",
   },
   {
-    role_en: "Frontend Engineer",
-    role_es: "Ingeniero Frontend",
+    role_en: "Frontend Software Engineer",
+    role_es: "Frontend Software Engineer",
     org: "Fleek",
     when_en: "2019 — 2021",
     when_es: "2019 — 2021",
-    place_en: "Remote · CA",
-    place_es: "Remoto · CA",
+    place_en: "Remote · Global",
+    place_es: "Remoto · Global",
     detail_en:
       "Led frontend architecture for Plug Wallet, a browser-extension crypto wallet — originally Internet Computer only (ICP, Cycles, NFTs), since grown into a multi-chain wallet supporting BTC, ETH, SOL, ICP, and Odin with cross-chain swaps and in-wallet staking. Designed and shipped Space Desktop, a Dropbox-style cross-platform client for IPFS / Filecoin-backed storage. Built developer tooling (web-based IDE, CI / deploy pipelines) for writing, testing, and deploying smart contracts on Ethereum and the Internet Computer. Stack: React, Redux, TypeScript, Node.js, gRPC, Go, web3 / ethers, Electron, Docker.",
     detail_es:
       "Lideré la arquitectura frontend de Plug Wallet, una extensión de navegador crypto — originalmente solo Internet Computer (ICP, Cycles, NFTs), hoy wallet multi-chain que soporta BTC, ETH, SOL, ICP y Odin con cross-chain swaps e in-wallet staking. Diseñé y envié Space Desktop, un cliente cross-platform tipo Dropbox para almacenamiento sobre IPFS / Filecoin. Construí tooling para desarrolladores (IDE web, pipelines de CI / deploy) para escribir, testear y desplegar smart contracts en Ethereum y en Internet Computer. Stack: React, Redux, TypeScript, Node.js, gRPC, Go, web3 / ethers, Electron, Docker.",
   },
   {
-    role_en: "Frontend Engineer",
-    role_es: "Ingeniero Frontend",
+    role_en: "Frontend Software Engineer",
+    role_es: "Frontend Software Engineer",
     org: "ComparaOnline",
     when_en: "2018 — 2019",
     when_es: "2018 — 2019",
@@ -90,7 +90,20 @@ export const EXPERIENCE: Experience[] = [
       "Ingeniero en software factory. Envié una plataforma de intercambio de documentos transaccionales (Laravel / PHP + Angular) y una app mobile interna de tooling (Ionic) para gestión de incidentes de clientes. Stack: Node.js, Laravel (PHP), Angular, Ionic, MySQL, PostgreSQL, REST.",
   },
   {
-    role_en: "Accountant Analyst",
+    role_en: "Freelance Developer",
+    role_es: "Desarrollador Freelance",
+    org: "ASCOMED",
+    when_en: "2015 — 2017",
+    when_es: "2015 — 2017",
+    place_en: "Santiago · CL",
+    place_es: "Santiago · CL",
+    detail_en:
+      "Designed, built, and deployed a web application for client management and payment workflows for ASCOMED, in parallel with the day-job. Stack: Node.js, PHP, MySQL, Docker, HTML, CSS, JavaScript.",
+    detail_es:
+      "Diseñé, construí y puse en producción una aplicación web para gestión de clientes y flujos de pago para ASCOMED, en paralelo con el trabajo de planta. Stack: Node.js, PHP, MySQL, Docker, HTML, CSS, JavaScript.",
+  },
+  {
+    role_en: "Accounting Analyst",
     role_es: "Analista Contable",
     org: "Becton Dickinson · Capgemini",
     when_en: "2009 — 2016",
@@ -98,7 +111,7 @@ export const EXPERIENCE: Experience[] = [
     place_en: "Santiago · CL",
     place_es: "Santiago · CL",
     detail_en:
-      "Accountant analyst. Treasury, travel-and-expense management, and fixed-asset bookkeeping. A background that still informs how I approach engineering.",
+      "Accounting analyst. Treasury, travel-and-expense management, and fixed-asset bookkeeping. A background that still informs how I approach engineering.",
     detail_es:
       "Analista contable. Tesorería, gestión de gastos de viaje y contabilización de activos fijos. Un background que todavía moldea cómo abordo la ingeniería.",
   },

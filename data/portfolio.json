@@ -1,7 +1,7 @@
 {
   "meta": {
     "site_title": "Guillermo Puente Sandoval",
-    "description": "I'm a Full-Stack Engineer with 7+ years of experience. I'm based on Santiago, Chile. I've spent most of my experience focused on Web Development, but I also have experience in mobile and desktop apps development.",
+    "description": "I'm a Full-Stack Engineer with 10+ years of experience. I'm based on Santiago, Chile. I've spent most of my experience focused on Web Development, but I also have experience in mobile and desktop apps development.",
     "default_language": "en",
     "languages": ["en", "es"],
     "source": "Extracted from src/data/db.json, src/locales/en/translation.json, src/locales/es/translation.json and public assets of the existing portfolio.",
@@ -17,12 +17,12 @@
       "es": "Desarrollador Full-Stack"
     },
     "headline": {
-      "en": "Full-Stack Engineer with 7+ years of experience based in Santiago, Chile.",
-      "es": "Ingeniero Full-Stack con 7+ años de experiencia, basado en Santiago, Chile."
+      "en": "Full-Stack Engineer with 10+ years of experience based in Santiago, Chile.",
+      "es": "Ingeniero Full-Stack con 10+ años de experiencia, basado en Santiago, Chile."
     },
     "intro": {
-      "en": "Hello, hello! I'm Guillermo, a Full-Stack Engineer with 7+ years of experience. I'm based in Santiago, Chile. I've spent most of my career focused on web development, but I also have experience in mobile and desktop app development. If you want to know more about me, keep scrolling!",
-      "es": "Hola hola! Soy Guillermo y soy un desarrollador Full-Stack con 7+ años de experiencia. Soy de Santiago, Chile. He pasado la mayor parte de mi experiencia enfocado en el desarrollo web, paro también tengo experiencia en el desarrollo de aplicaciones móviles y de escritorio. Si quieres saber mas sobre mi, sigue scrolleando!"
+      "en": "Hello, hello! I'm Guillermo, a Full-Stack Engineer with 10+ years of experience. I'm based in Santiago, Chile. I've spent most of my career focused on web development, but I also have experience in mobile and desktop app development. If you want to know more about me, keep scrolling!",
+      "es": "Hola hola! Soy Guillermo y soy un desarrollador Full-Stack con 10+ años de experiencia. Soy de Santiago, Chile. He pasado la mayor parte de mi experiencia enfocado en el desarrollo web, paro también tengo experiencia en el desarrollo de aplicaciones móviles y de escritorio. Si quieres saber mas sobre mi, sigue scrolleando!"
     },
     "location": "Santiago, Chile",
     "email": "guillermo.ps09@gmail.com",
@@ -72,8 +72,8 @@
         "es": "Desarrollo Web"
       },
       "description": {
-        "en": "I have 7+ years of experience in web development, both on the Front-end side and Back-end side. I know how to build and deliver beautiful UIs using modern technologies as well as build scalable services that can handle your business logic.",
-        "es": "Tengo más de 6 años de experiencia en desarrollo web, tanto en el lado del Front-end como en el Back-end. Sé cómo crear y ofrecer interfaces de usuario que lucen hermosas utilizando tecnologías modernas, así como también crear servicios escalables que puedan manejar la lógica de tu negocio."
+        "en": "I have 10+ years of experience in web development, both on the Front-end side and Back-end side. I know how to build and deliver beautiful UIs using modern technologies as well as build scalable services that can handle your business logic.",
+        "es": "Tengo más de 10 años de experiencia en desarrollo web, tanto en el lado del Front-end como en el Back-end. Sé cómo crear y ofrecer interfaces de usuario que lucen hermosas utilizando tecnologías modernas, así como también crear servicios escalables que puedan manejar la lógica de tu negocio."
       }
     },
     {
@@ -113,8 +113,8 @@
   "education": [
     {
       "id": "software_engineer",
-      "from": "2016",
-      "to": null,
+      "from": "2012",
+      "to": "2015",
       "entity": "Instituto Profesional AIEP",
       "title": {
         "en": "Software Engineer",
@@ -142,11 +142,11 @@
   ],
   "experience": [
     {
-      "id": "evernote",
-      "company": "Evernote",
+      "id": "makerdao_ses",
+      "company": "MakerDAO SES",
       "from": {
-        "en": "Jun 2021",
-        "es": "Jun 2021"
+        "en": "Oct 2023",
+        "es": "Oct 2023"
       },
       "to": {
         "en": "Current",
@@ -158,10 +158,32 @@
         "es": "Senior Software Engineer"
       },
       "detail": {
-        "en": "At Evernote, I am responsible for both maintaining the existing features and developing new ones for all client environments, including Mobile, Desktop, and Web. I also have contributed in the development of microservices and client communication layer. Tech stack: React, Redux, NodeJS, GraphQL, gRPC, Electron, Docker, Kubernetes, Circle CI, and Typescript.",
-        "es": "Responsable del mantenimiento y desarrollo de nuevos features para todos los clientes de Evernote: Mobile, Desktop y Web. Tabién he trabajado en el desarrollo de micro-servicios y en la capa de comunicación con los clientes. Tech stack: React, Redux, NodeJS, GraphQL, gRPC, Electron, Docker, Kubernetes, Circle CI, and Typescript."
+        "en": "Owning core architectural pillars of Powerhouse — a DAO operations platform covering governance, document management, and budgeting — across ~2,100 commits. Shipped features on Renown (wallet-based identity + credential SDK: DID:pkh, EVM signatures, JWT bearer sessions) and led the design system used across Connect, Academy, and Vetra. The platform also ships Reactor MCP, an MCP server agents connect to for scaffolding document models, editors, drives, and documents end-to-end. Tech stack: React, TypeScript, Electron, GraphQL, Node.js, Express, Redux, TailwindCSS, Vite, Storybook, Vitest.",
+        "es": "A cargo de pilares arquitectónicos de Powerhouse — plataforma de operaciones para DAOs que cubre gobernanza, gestión documental y presupuestos — con ~2.100 commits. Envié features sobre Renown (SDK de identidad y credenciales basado en wallet: DID:pkh, firmas EVM, sesiones JWT bearer) y lideré el design system usado en Connect, Academy y Vetra. La plataforma también incluye Reactor MCP, un servidor MCP al que los agentes se conectan para scaffolding de document models, editors, drives y documentos de punta a punta. Tech stack: React, TypeScript, Electron, GraphQL, Node.js, Express, Redux, TailwindCSS, Vite, Storybook, Vitest."
       },
-      "tech_stack": ["React", "Redux", "NodeJS", "GraphQL", "gRPC", "Electron", "Docker", "Kubernetes", "Circle CI", "TypeScript"]
+      "tech_stack": ["React", "TypeScript", "Electron", "GraphQL", "Node.js", "Express", "Redux", "TailwindCSS", "Vite", "Storybook", "Vitest"]
+    },
+    {
+      "id": "evernote",
+      "company": "Evernote",
+      "from": {
+        "en": "Jun 2021",
+        "es": "Jun 2021"
+      },
+      "to": {
+        "en": "Jul 2023",
+        "es": "Jul 2023"
+      },
+      "is_current": false,
+      "title": {
+        "en": "Senior Software Engineer",
+        "es": "Senior Software Engineer"
+      },
+      "detail": {
+        "en": "At Evernote, I was responsible for both maintaining the existing features and developing new ones for all client environments, including Mobile, Desktop, and Web. I also contributed to the development of microservices and client communication layer, and shipped Evernote's first AI feature (AI Note Cleanup). Tech stack: React, Redux, NodeJS, GraphQL, gRPC, OpenAI, Electron, Docker, Kubernetes, Circle CI, and Typescript.",
+        "es": "Responsable del mantenimiento y desarrollo de nuevos features para todos los clientes de Evernote: Mobile, Desktop y Web. Tabién trabajé en el desarrollo de micro-servicios y en la capa de comunicación con los clientes, y envié la primera feature con IA de Evernote (AI Note Cleanup). Tech stack: React, Redux, NodeJS, GraphQL, gRPC, OpenAI, Electron, Docker, Kubernetes, Circle CI, and Typescript."
+      },
+      "tech_stack": ["React", "Redux", "NodeJS", "GraphQL", "gRPC", "OpenAI", "Electron", "Docker", "Kubernetes", "Circle CI", "TypeScript"]
     },
     {
       "id": "fleek",
@@ -215,8 +237,8 @@
         "es": "Jun 2017"
       },
       "to": {
-        "en": "Jan 2018",
-        "es": "Ene 2018"
+        "en": "Feb 2018",
+        "es": "Feb 2018"
       },
       "is_current": false,
       "title": {
@@ -286,11 +308,11 @@
       },
       "is_current": false,
       "title": {
-        "en": "Accountant Analyst",
+        "en": "Accounting Analyst",
         "es": "Analista Contable"
       },
       "detail": {
-        "en": "Accountant analyst, responsible for treasury and T&E tasks.",
+        "en": "Accounting analyst, responsible for treasury and T&E tasks.",
         "es": "Analista contable responsable de tesorería y tareas relacionadas a gastos y viajes."
       },
       "tech_stack": []
@@ -303,8 +325,8 @@
         "es": "Dec 2009"
       },
       "to": {
-        "en": "Sep 2011",
-        "es": "Sep 2011"
+        "en": "Jul 2011",
+        "es": "Jul 2011"
       },
       "is_current": false,
       "title": {
