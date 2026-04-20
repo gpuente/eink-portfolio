@@ -155,13 +155,13 @@ export const COPY: Record<Lang, Copy> = {
     aboutP1:
       "I'm a senior full-stack engineer based in Santiago, Chile. Over the past decade I've built web platforms, developer tooling, and distributed systems for products used by millions — at MakerDAO SES, Evernote, Fleek, Groupon, and ComparaOnline.",
     aboutP2:
-      "Recent work spans AI-powered features (LLMs, RAG, tool-calling agents) shipped to production and wallet-based identity infrastructure (EVM, DID, signature flows) powering DAO tooling. I shipped Evernote's first AI-powered feature — AI Note Cleanup — and now own core architectural pillars of Powerhouse, MakerDAO SES's DAO operations platform, where I also shipped features on Renown, its wallet-based identity + credential SDK.",
+      "Recent work spans AI-powered features (LLMs, RAG, tool-calling agents) shipped to production and wallet-based identity infrastructure (EVM, DID, signature flows) powering DAO tooling. I shipped Evernote's first AI-powered feature — AI Note Cleanup — and now work as part of the core dev team building Powerhouse, MakerDAO SES's DAO operations platform, where I've also shipped features on Renown, its wallet-based identity + credential SDK.",
     aboutP3:
       "I work at the intersection of AI, product engineering, and Web3. Before software, I trained as an accountant — a background that still shapes how I engineer: numbers should reconcile, invariants should hold, and the details are rarely negotiable.",
 
     currently: "Currently",
     currentlyValue:
-      "Senior Software Engineer at MakerDAO SES, owning core architectural pillars of Powerhouse — a DAO operations platform — across ~2,100 commits. Day-to-day spans design-system ownership, wallet-based identity work on Renown, and heavy use of Claude Code to move fast across the monorepo.",
+      "Senior Software Engineer at MakerDAO SES, part of the core dev team building Powerhouse — a DAO operations platform — with ~2,100 commits of my own in the monorepo. Day-to-day spans design-system contributions, wallet-based identity work on Renown, and heavy use of Claude Code to move fast across the codebase.",
 
     workTitle: "Work history.",
 
@@ -303,13 +303,13 @@ export const COPY: Record<Lang, Copy> = {
     aboutP1:
       "Soy ingeniero full-stack senior, basado en Santiago, Chile. Durante más de una década he construido plataformas web, herramientas para desarrolladores y sistemas distribuidos para productos usados por millones — en MakerDAO SES, Evernote, Fleek, Groupon y ComparaOnline.",
     aboutP2:
-      "Mi trabajo reciente combina features con IA (LLMs, RAG, agents tool-calling) enviadas a producción e infraestructura de identidad basada en wallet (EVM, DID, firmas) que sostiene tooling para DAOs. Envié AI Note Cleanup, la primera feature con IA de Evernote, y ahora trabajo sobre los pilares arquitectónicos de Powerhouse — la plataforma de operaciones para DAOs de MakerDAO SES —, donde también envié features sobre Renown, su SDK de identidad y credenciales basado en wallet.",
+      "Mi trabajo reciente combina features con IA (LLMs, RAG, agents tool-calling) enviadas a producción e infraestructura de identidad basada en wallet (EVM, DID, firmas) que sostiene tooling para DAOs. Envié AI Note Cleanup, la primera feature con IA de Evernote, y ahora formo parte del core dev team que construye Powerhouse — la plataforma de operaciones para DAOs de MakerDAO SES —, donde también he enviado features sobre Renown, su SDK de identidad y credenciales basado en wallet.",
     aboutP3:
       "Trabajo en la intersección entre IA, ingeniería de producto y Web3. Antes del software me formé como contador — un background que todavía moldea cómo hago ingeniería: los números deben cuadrar, los invariantes deben sostenerse y los detalles rara vez son negociables.",
 
     currently: "Ahora mismo",
     currentlyValue:
-      "Senior Software Engineer en MakerDAO SES, a cargo de pilares arquitectónicos de Powerhouse — plataforma de operaciones para DAOs — con ~2.100 commits. El día a día combina design system, trabajo sobre Renown (identidad basada en wallet) y uso intensivo de Claude Code para moverme rápido sobre el monorepo.",
+      "Senior Software Engineer en MakerDAO SES, parte del core dev team que construye Powerhouse — plataforma de operaciones para DAOs — con ~2.100 commits propios en el monorepo. El día a día combina contribuciones al design system, trabajo sobre Renown (identidad basada en wallet) y uso intensivo de Claude Code para moverme rápido sobre el código.",
 
     workTitle: "Historia laboral.",
 
