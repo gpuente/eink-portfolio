@@ -1,0 +1,41 @@
+name: Deploy rag-server
+
+# Deploys @portfolio/rag-server to Fly.io on every push to main that touches
+# the server or its build inputs. Unrelated edits (apps/web, docs, etc.) are
+# skipped via the path filter below, so the web app's Netlify deploys and
+# this workflow stay independent.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/rag-server/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - ".dockerignore"
+      - ".github/workflows/deploy-rag-server.yml"
+  workflow_dispatch: {}
+
+# Collapse overlapping runs — the latest push wins, older in-flight deploys
+# get cancelled. Prevents a rapid push → push sequence from racing.
+concurrency:
+  group: deploy-rag-server
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build + deploy to Fly.io
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # --remote-only builds on Fly's builder — no Docker daemon needed in CI.
+      - name: Deploy
+        run: flyctl deploy --config apps/rag-server/fly.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
