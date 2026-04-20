@@ -109,7 +109,14 @@ const PERSON_JSONLD = {
 						if (!gaMeasurementId) return;
 
 						window.dataLayer = window.dataLayer || [];
-						window.gtag = window.gtag || function (...args) { window.dataLayer.push(args); };
+						// Canonical gtag shim: MUST use `arguments` (the array-like object),
+						// NOT rest params `...args` (a real Array). gtag/js iterates the
+						// dataLayer expecting Arguments objects; real Arrays get silently
+						// dropped, so no /g/collect requests ever fire — the symptom is
+						// "GA configured, script loaded, but zero hits in the property".
+						// Also declared as `function gtag(){}` (not `window.gtag = fn`) to
+						// mirror the exact pattern Google's docs use.
+						window.gtag = window.gtag || function gtag() { window.dataLayer.push(arguments); };
 						const analyticsState = window.__einkAnalytics || (window.__einkAnalytics = {
 							pageLoadListenerAdded: false,
 							clickListenerAdded: false,
@@ -128,6 +135,10 @@ const PERSON_JSONLD = {
 							});
 						};
 
+						// `astro:page-load` fires on both the initial document load AND
+						// every SPA navigation swap, so one listener covers both cases —
+						// no manual initial trackPageView() call needed (that used to
+						// double-count).
 						if (!analyticsState.pageLoadListenerAdded) {
 							document.addEventListener("astro:page-load", trackPageView);
 							analyticsState.pageLoadListenerAdded = true;
@@ -171,8 +182,6 @@ const PERSON_JSONLD = {
 							});
 							analyticsState.clickListenerAdded = true;
 						}
-
-						trackPageView();
 					})();
 				</script>
 			</>
