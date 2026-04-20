@@ -1,8 +1,11 @@
 ---
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import { ArrowLeft } from 'lucide-react';
 import Layout from '../layouts/Layout.astro';
 import { PROJECTS } from '../components/eink/data/projects';
+import CvLangToggle from '../components/cv/CvLangToggle';
+import CvThemeToggle from '../components/cv/CvThemeToggle';
 
 import powerhouseImg from '../assets/portfolio/powerhouse.jpeg';
 import evernoteImg from '../assets/portfolio/en-web.jpeg';
@@ -37,31 +40,77 @@ const mediaMap: Record<string, Media> = {
 const items = PROJECTS
 	.map(p => ({ project: p, media: mediaMap[p.title] }))
 	.filter((it): it is { project: typeof it.project; media: Media } => it.media != null);
+
+const COPY = {
+	en: {
+		backLabel: 'Portfolio',
+		metaCount: (n: number) => `Gallery · ${n} projects`,
+		title: 'Gallery.',
+		intro: 'A visual archive of products and personal projects. Hover a card to see it in colour. Click to open the live site or repository.',
+		backBottom: 'Back to portfolio',
+	},
+	es: {
+		backLabel: 'Portafolio',
+		metaCount: (n: number) => `Galería · ${n} proyectos`,
+		title: 'Galería.',
+		intro: 'Archivo visual de productos y proyectos personales. Pasa el cursor sobre una tarjeta para verla a color. Haz clic para abrir el sitio o el repositorio.',
+		backBottom: 'Volver al portafolio',
+	},
+} as const;
+
+const LANGS = ['en', 'es'] as const;
 ---
 
 <Layout
 	title="Gallery · Guillermo Puente"
 	description="Visual archive of products and personal projects shipped over the past decade."
 >
-	<!-- Surface layers — paper grain, vignette, inset shadow -->
-	<div class="grain"></div>
-	<div class="vignette"></div>
-	<div class="inset-shadow"></div>
+	<!-- Layout.astro's head-level pre-paint script has already set
+	     `html[data-lang]` + `html[data-mode]` from localStorage, so the
+	     correct language + theme render on the first frame. -->
 
-	<header class="bar">
-		<a href="/" class="back">
-			<span aria-hidden="true">&larr;</span> Portfolio
-		</a>
-		<span class="meta">Gallery &middot; {items.length} projects</span>
-	</header>
+	<!-- Surface layers — paper grain + vignette + inset shadow -->
+	<div class="grain" aria-hidden="true"></div>
+	<div class="vignette" aria-hidden="true"></div>
+	<div class="inset-shadow" aria-hidden="true"></div>
+
+	<!-- Top bar — same structure as /cv: back link + lang toggle + theme toggle.
+	     Critical layout ships as inline styles so the right cluster doesn't
+	     reshuffle during Astro's ClientRouter SPA swap before the page CSS
+	     activates. -->
+	<div
+		class="top-bar"
+		style="position: sticky; top: 0; z-index: 50; background: var(--paper, #ebe7de); border-bottom: 1px dashed var(--ink-faint, #9c9890);"
+	>
+		<div
+			class="top-bar-inner"
+			style="box-sizing: content-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1200px; margin: 0 auto; padding: 12px 24px; min-height: 44px;"
+		>
+			<a href="/" class="back" aria-label="Back to portfolio">
+				<ArrowLeft size={14} strokeWidth={2} className="back-icon" aria-hidden="true" />
+				<span data-gallery-lang="en">{COPY.en.backLabel}</span>
+				<span data-gallery-lang="es">{COPY.es.backLabel}</span>
+			</a>
+			<div
+				class="top-bar-right"
+				style="display: flex; align-items: center; gap: 10px;"
+			>
+				<span class="meta" data-gallery-lang="en">{COPY.en.metaCount(items.length)}</span>
+				<span class="meta" data-gallery-lang="es">{COPY.es.metaCount(items.length)}</span>
+				<CvLangToggle client:only="react" />
+				<CvThemeToggle client:only="react" />
+			</div>
+		</div>
+	</div>
 
 	<main class="page">
 		<div class="intro">
-			<h1>Gallery.</h1>
-			<p>
-				A visual archive of products and personal projects. Hover a card to see it in colour.
-				Click to open the live site or repository.
-			</p>
+			{LANGS.map((l) => (
+				<div data-gallery-lang={l}>
+					<h1>{COPY[l].title}</h1>
+					<p>{COPY[l].intro}</p>
+				</div>
+			))}
 		</div>
 
 		<div class="grid">
@@ -97,7 +146,8 @@ const items = PROJECTS
 								<h3>{project.title}</h3>
 								<span class="year">{project.year}</span>
 							</div>
-							<div class="kind">{project.kind_en}</div>
+							<div class="kind" data-gallery-lang="en">{project.kind_en}</div>
+							<div class="kind" data-gallery-lang="es">{project.kind_es}</div>
 						</div>
 					</>
 				);
@@ -113,23 +163,62 @@ const items = PROJECTS
 		</div>
 
 		<footer class="end">
-			<a href="/" class="back">
-				<span aria-hidden="true">&larr;</span> Back to portfolio
-			</a>
+			{LANGS.map((l) => (
+				<a href="/" class="back" data-gallery-lang={l}>
+					<span aria-hidden="true">&larr;</span> {COPY[l].backBottom}
+				</a>
+			))}
 		</footer>
 	</main>
 </Layout>
 
-<style>
+<script>
+	// Keep <html lang> in sync with the data-lang the pre-paint script applied
+	// so screen readers read the correct language on first load. The
+	// CvLangToggle island keeps the attribute in sync after hydration.
+	const current =
+		(document.documentElement.getAttribute('data-lang') as 'en' | 'es' | null) ??
+		'en';
+	document.documentElement.setAttribute('lang', current);
+</script>
+
+<style is:global>
 	@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
-	:global(html), :global(body) {
-		background: #e8e4db;
-		color: #2b2a27;
+	/* Design tokens — match the /cv palette so the toggles and surfaces
+	   share the same ink/paper across both routes. Dark palette is keyed
+	   on html[data-mode="dark"], which Layout's pre-paint script sets
+	   from localStorage before the first paint. */
+	:root {
+		--paper: #ebe7de;
+		--paper-bright: #f3efe6;
+		--ink: #1a1a1a;
+		--ink-soft: #595651;
+		--ink-faint: #9c9890;
+	}
+	html[data-mode="dark"] {
+		--paper: #3a3a36;
+		--paper-bright: #44443f;
+		--ink: #dcd8cd;
+		--ink-soft: #9a968c;
+		--ink-faint: #6b675f;
+	}
+
+	html, body {
+		margin: 0;
+		padding: 0;
+		background: var(--paper);
+		color: var(--ink);
 		font-family: 'Newsreader', 'Iowan Old Style', Georgia, serif;
 	}
 
-	/* Surface layers */
+	/* Language visibility — only the active language is displayed.
+	   Defaults to EN when no attribute is set (before the pre-paint
+	   script runs on a cold fetch). */
+	html[data-lang="es"] [data-gallery-lang="en"] { display: none !important; }
+	html:not([data-lang="es"]) [data-gallery-lang="es"] { display: none !important; }
+
+	/* ─────────────── Surface layers (screen only) ─────────────── */
 	.grain {
 		position: fixed; inset: 0; pointer-events: none; z-index: 100;
 		background-image:
@@ -140,9 +229,19 @@ const items = PROJECTS
 		mix-blend-mode: multiply;
 		opacity: .55;
 	}
+	html[data-mode="dark"] .grain {
+		background-image:
+			radial-gradient(rgba(255, 255, 255, .04) 1px, transparent 1px),
+			radial-gradient(rgba(255, 255, 255, .028) 1px, transparent 1px);
+		mix-blend-mode: screen;
+		opacity: .5;
+	}
 	.vignette {
 		position: fixed; inset: 0; pointer-events: none; z-index: 99;
 		background: radial-gradient(ellipse at center, transparent 50%, rgba(80, 65, 40, .08) 85%, rgba(80, 65, 40, .14) 100%);
+	}
+	html[data-mode="dark"] .vignette {
+		background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, .2) 90%, rgba(0, 0, 0, .35) 100%);
 	}
 	.inset-shadow {
 		position: fixed; inset: 0; pointer-events: none; z-index: 98;
@@ -150,46 +249,81 @@ const items = PROJECTS
 			inset 0 3px 10px rgba(60, 50, 30, .12),
 			inset 0 -2px 6px rgba(255, 255, 255, .25);
 	}
+	html[data-mode="dark"] .inset-shadow {
+		box-shadow:
+			inset 0 3px 10px rgba(0, 0, 0, .35),
+			inset 0 -2px 6px rgba(255, 255, 255, .04);
+	}
 
-	/* Top bar with back link */
-	.bar {
-		position: fixed;
-		top: 0; left: 0; right: 0;
+	/* ─────────────── Top bar — mirrors /cv ─────────────── */
+	.top-bar {
+		position: sticky;
+		top: 0;
 		z-index: 50;
+		background: var(--paper);
+		border-bottom: 1px dashed var(--ink-faint);
+	}
+	.top-bar-inner {
+		box-sizing: content-box;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		gap: 12px;
+		max-width: 1200px;
+		margin: 0 auto;
 		padding: 12px 24px;
 		min-height: 44px;
-		background: #e8e4db;
-		border-bottom: 1px dashed #a8a49a;
+		color: var(--ink-soft);
 		font-family: 'JetBrains Mono', ui-monospace, monospace;
-		font-size: 12px;
-		letter-spacing: .06em;
-		color: #6b6860;
+		font-size: 11px;
+		letter-spacing: .18em;
+		text-transform: uppercase;
 	}
-	.bar .back,
-	.end .back {
-		text-decoration: none;
-		color: #2b2a27;
+	.top-bar .back {
 		display: inline-flex;
 		align-items: center;
-		gap: 8px;
-		font-family: inherit;
-		font-size: inherit;
+		gap: 7px;
+		color: var(--ink-soft);
+		text-decoration: none;
+		transition: color 160ms ease, transform 200ms ease;
 	}
-	.bar .meta {
-		text-transform: uppercase;
-		letter-spacing: .25em;
+	.top-bar .back:hover { color: var(--ink); }
+	.top-bar .back:hover .back-icon { transform: translateX(-2px); }
+	.top-bar .back-icon {
+		display: inline-flex;
+		transition: transform 200ms ease;
+	}
+	.top-bar-right {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+	.top-bar-right .meta {
 		font-size: 10px;
-		color: #6b6860;
+		letter-spacing: .25em;
+		color: var(--ink-soft);
+	}
+	/* Hide the count on narrow viewports so the toggles stay visible. */
+	@media (max-width: 620px) {
+		.top-bar-right .meta { display: none !important; }
+	}
+	/* Reserve layout slots for the client-only toggles so the right
+	   cluster doesn't reshuffle as React hydrates (visible on SPA nav
+	   from other pages). */
+	.top-bar-right > astro-island {
+		display: inline-flex;
+		align-items: center;
+		min-width: 40px;
+		min-height: 24px;
 	}
 
-	/* Page */
+	/* ─────────────── Page ─────────────── */
 	.page {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 96px 24px 96px;
+		padding: 64px 24px 96px;
+		position: relative;
+		z-index: 1;
 	}
 	.intro {
 		max-width: 600px;
@@ -201,16 +335,16 @@ const items = PROJECTS
 		font-weight: 500;
 		letter-spacing: -.015em;
 		margin: 0 0 16px;
-		color: #2b2a27;
+		color: var(--ink);
 	}
 	.intro p {
-		color: #6b6860;
+		color: var(--ink-soft);
 		font-size: 17px;
 		line-height: 1.6;
 		margin: 0;
 	}
 
-	/* Grid */
+	/* ─────────────── Grid ─────────────── */
 	.grid {
 		display: grid;
 		grid-template-columns: 1fr;
@@ -220,13 +354,13 @@ const items = PROJECTS
 		.grid { grid-template-columns: 1fr 1fr; gap: 32px; }
 	}
 
-	/* Card */
+	/* ─────────────── Card ─────────────── */
 	.card {
 		display: block;
 		text-decoration: none;
 		color: inherit;
-		background: #f1ede4;
-		border: 1px solid #a8a49a;
+		background: var(--paper-bright);
+		border: 1px solid var(--ink-faint);
 		border-radius: 10px;
 		overflow: hidden;
 		transition: box-shadow 600ms ease, transform 600ms ease;
@@ -235,20 +369,23 @@ const items = PROJECTS
 		box-shadow: 0 14px 30px -16px rgba(60, 50, 30, .35);
 		transform: translateY(-2px);
 	}
+	html[data-mode="dark"] a.card:hover {
+		box-shadow: 0 14px 30px -16px rgba(0, 0, 0, .6);
+	}
 
 	.media-wrap {
 		display: block;
 		width: 100%;
 		aspect-ratio: 16 / 10;
 		overflow: hidden;
-		background: #e8e4db;
+		background: var(--paper);
 	}
 	.media {
 		display: block;
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		filter: grayscale(100%) contrast(0.92) brightness(0.98);
+		filter: grayscale(100%) contrast(.92) brightness(.98);
 		transition: filter 700ms ease;
 	}
 	.card:hover .media {
@@ -257,7 +394,7 @@ const items = PROJECTS
 
 	.info {
 		padding: 16px 18px;
-		border-top: 1px solid #a8a49a;
+		border-top: 1px solid var(--ink-faint);
 	}
 	.title-row {
 		display: flex;
@@ -270,20 +407,20 @@ const items = PROJECTS
 		font-family: 'Newsreader', serif;
 		font-size: 20px;
 		font-weight: 500;
-		color: #2b2a27;
+		color: var(--ink);
 		letter-spacing: -.005em;
 	}
 	.info .year {
 		font-family: 'JetBrains Mono', ui-monospace, monospace;
 		font-size: 11px;
-		color: #a8a49a;
+		color: var(--ink-faint);
 		letter-spacing: .15em;
 	}
 	.info .kind {
 		margin-top: 6px;
 		font-family: 'JetBrains Mono', ui-monospace, monospace;
 		font-size: 10px;
-		color: #6b6860;
+		color: var(--ink-soft);
 		letter-spacing: .15em;
 		text-transform: uppercase;
 	}
@@ -292,8 +429,15 @@ const items = PROJECTS
 		margin-top: 80px;
 		text-align: center;
 	}
+	.end .back {
+		text-decoration: none;
+		color: var(--ink);
+		font-family: 'JetBrains Mono', ui-monospace, monospace;
+		font-size: 12px;
+		letter-spacing: .06em;
+	}
 
-	/* Buttons inside the card should never capture clicks (consistent with main page) */
+	/* Buttons inside the card should never capture clicks. */
 	.card * { pointer-events: none; }
 	a.card { cursor: pointer; }
 </style>
