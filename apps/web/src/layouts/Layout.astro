@@ -29,6 +29,7 @@ const canonicalUrl = canonical ?? new URL(Astro.url.pathname, site).toString();
 const absoluteImage = /^https?:\/\//.test(image)
 	? image
 	: new URL(image, site).toString();
+const clarityProjectId = import.meta.env.PUBLIC_CLARITY_PROJECT_ID?.trim();
 const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID?.trim();
 
 // Person schema for search engines — helps Google show a rich result when
@@ -101,6 +102,18 @@ const PERSON_JSONLD = {
 		{/* JSON-LD Person schema so Google can tie the site to the human and
 		    render a rich result for "Guillermo Puente" queries. */}
 		<script type="application/ld+json" is:inline set:html={JSON.stringify(PERSON_JSONLD)}></script>
+		{clarityProjectId && (
+			<script is:inline define:vars={{ clarityProjectId }}>
+				(function (c, l, a, r, i, t, y) {
+					c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+					t = l.createElement(r);
+					t.async = 1;
+					t.src = "https://www.clarity.ms/tag/" + i;
+					y = l.getElementsByTagName(r)[0];
+					y.parentNode.insertBefore(t, y);
+				})(window, document, "clarity", "script", clarityProjectId);
+			</script>
+		)}
 		{gaMeasurementId && (
 			<>
 				<script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
