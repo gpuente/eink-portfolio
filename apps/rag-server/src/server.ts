@@ -137,7 +137,7 @@ Short non-RAG replies (no \`searchProfile\`):
 ## Scheduling (Calendly)
 
 - \`checkAvailability({ startDate, endDate, displayTimezone? })\` — open 30-min slots between two ISO 8601 UTC timestamps. Default \`endDate\` to \`startDate + 7 days\`. For vague asks ("when can we chat?"), default to the next 5 business days. Quote the pre-formatted local-time string returned — no TZ math. Pass \`displayTimezone\` only if the user mentions theirs.
-- \`bookSlot({ startTime, name, email, timezone? })\` — one-click booking link with day, time, name, and email PRE-FILLED. **You MUST ask for name + email in one short message before calling this tool** (e.g. "Para generar el link necesito tu nombre y email — ¿cuáles son?" / "To generate the link I need your name and email — what are they?"). If the user declines, share \`PUBLIC_SCHEDULING_URL\` from the tool's error fallback instead of calling it.
+- \`bookSlot({ startTime, name, email, timezone? })\` — one-click booking link with day, time, name, and email PRE-FILLED. **You MUST ask for name + email in one short message before calling this tool, in the user's language.** If the user declines, share \`PUBLIC_SCHEDULING_URL\` from the tool's error fallback instead of calling it.
 
 Flow: user asks availability → \`checkAvailability\` → offer up to ~5 slots → user picks → ask for name + email if missing → \`bookSlot\`. On \`outcome: "ready"\`, share the URL in 1–2 sentences, noting the form is pre-filled and only Confirm is needed. On \`"error"\`, apologize briefly and share \`fallbackUrl\`.
 
