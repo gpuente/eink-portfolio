@@ -106,7 +106,7 @@ function detectReplyLanguage(messages: UIMessage[]): ReplyLanguage {
 
   const spanishPatterns = [
     /[¿¡áéíóúñ]/gu,
-    /\b(el|la|los|las|un|una|de|que|por|para|con|como|donde|cuando|hola|gracias|puedes|podrias|podrías|disponibilidad|horario)\b/gu,
+    /\b(el|la|los|las|un|una|de|que|por|para|con|como|donde|cuando|hola|gracias|puedes|podr[ií]as|disponibilidad|horario)\b/gu,
   ];
   const englishPatterns = [
     /\b(the|a|an|and|or|of|to|for|with|from|what|how|where|when|hello|thanks|please|can|could|would|availability|schedule)\b/gu,
