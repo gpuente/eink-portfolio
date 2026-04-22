@@ -79,6 +79,47 @@ function lastUserQuery(messages: UIMessage[]): string | undefined {
   return undefined;
 }
 
+type ReplyLanguage = "en" | "es";
+
+function detectReplyLanguage(messages: UIMessage[]): ReplyLanguage {
+  const query = lastUserQuery(messages)?.toLowerCase() ?? "";
+  if (!query) return "en";
+
+  // Explicit language requests always win.
+  if (
+    /\b(in english|english please|answer in english|reply in english|speak english)\b/u.test(
+      query,
+    ) ||
+    /\b(en ingl[eé]s)\b/u.test(query)
+  ) {
+    return "en";
+  }
+
+  if (
+    /\b(in spanish|spanish please|answer in spanish|reply in spanish|speak spanish)\b/u.test(
+      query,
+    ) ||
+    /\b(en espa[nñ]ol)\b/u.test(query)
+  ) {
+    return "es";
+  }
+
+  const spanishPatterns = [
+    /[¿¡áéíóúñ]/gu,
+    /\b(el|la|los|las|un|una|de|que|por|para|con|como|donde|cuando|hola|gracias|puedes|podr[ií]as|disponibilidad|horario)\b/gu,
+  ];
+  const englishPatterns = [
+    /\b(the|a|an|and|or|of|to|for|with|from|what|how|where|when|hello|thanks|please|can|could|would|availability|schedule)\b/gu,
+  ];
+
+  const score = (patterns: RegExp[]) =>
+    patterns.reduce((total, pattern) => total + (query.match(pattern)?.length ?? 0), 0);
+
+  const spanishScore = score(spanishPatterns);
+  const englishScore = score(englishPatterns);
+  return spanishScore > englishScore ? "es" : "en";
+}
+
 /**
  * Returns the final system prompt. The cacheable body goes FIRST, the
  * per-request UTC timestamp goes LAST. OpenAI's automatic prompt cache
@@ -88,7 +129,7 @@ function lastUserQuery(messages: UIMessage[]): string | undefined {
  * cache hot, which cuts input-processing latency ~80% and input cost
  * ~50% on repeat requests.
  */
-function buildSystemPrompt(): string {
+function buildSystemPrompt(language: ReplyLanguage): string {
   const now = new Date();
   const todayStr = now.toLocaleDateString("en-US", {
     weekday: "long",
@@ -97,7 +138,14 @@ function buildSystemPrompt(): string {
     day: "numeric",
     timeZone: "UTC",
   });
+  const languageLock =
+    language === "es"
+      ? "**Response language lock:** For this reply, write only in Spanish. Do not mix in English unless the user explicitly requests bilingual output."
+      : "**Response language lock:** For this reply, write only in English. Do not mix in Spanish unless the user explicitly requests bilingual output.";
+
   return `${SYSTEM_PROMPT_BODY}
+
+${languageLock}
 
 ---
 
@@ -226,6 +274,7 @@ app.post("/chat", async (c) => {
   // ── History cap (drop older turns to bound token usage per request) ──
   const allMessages = parsed.data.messages as UIMessage[];
   const messages = allMessages.slice(-env.MAX_HISTORY_MESSAGES);
+  const responseLanguage = detectReplyLanguage(messages);
 
   // ── Observability: one traceId per RAG pipeline run, threaded through
   // every sub-step (tools, logs, metrics). Grafana + VictoriaLogs can then
@@ -309,12 +358,13 @@ app.post("/chat", async (c) => {
     trace_id: traceId,
     query: lastUserQuery(messages),
     history_messages: messages.length,
+    response_language: responseLanguage,
   });
 
   const result = streamText({
     model: activeChatModel,
     providerOptions: chatModelProviderOptions,
-    system: buildSystemPrompt(),
+    system: buildSystemPrompt(responseLanguage),
     messages: convertToModelMessages(messages),
     stopWhen: stepCountIs(6),
     maxOutputTokens: env.MAX_OUTPUT_TOKENS,
